@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">iPhoneSimulator</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{8605BFE4-04C1-420F-87BE-9FA1191169BA}</ProjectGuid>
+    <ProjectGuid>{AFFAD55D-89D3-411E-859A-B3DC0DC5B5CF}</ProjectGuid>
     <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld.iOS</RootNamespace>
@@ -139,7 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HelloWorld\HelloWorld.csproj">
-      <Project>{8B482342-73E5-4820-94A2-A8B59398F323}</Project>
+      <Project>{6CC7DA54-8F6A-431E-A517-A99C98101BE7}</Project>
       <Name>HelloWorld</Name>
     </ProjectReference>
   </ItemGroup>
