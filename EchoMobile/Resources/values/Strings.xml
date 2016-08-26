@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Mobile App for a site</string>
+  <string name="previous">Previous</string>
+  <string name="next">Next</string>
+  <string name="calendar">Calendar</string>
+  <string name="news">News</string>
+  <string name="blog">Blogs</string>
+  <string name="show">Shows</string>
+  <string name="author">Author</string>
+</resources>
