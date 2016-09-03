@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Echo.ContentTypes
 {
@@ -23,11 +24,12 @@ namespace Echo.ContentTypes
             var random = new Random();
             for (var i = 0; i < number; i++)
             {
+                Common.NewsNumber++;
                 _news.Add(new NewsItem
                 {
                     NewsId = Guid.NewGuid(),
                     NewsDateTime = ContentDay.Date==DateTime.Now.Date?DateTime.Now:ContentDay,
-                    NewsTitle = TextGenerator(2, 10),
+                    NewsTitle = Common.NewsNumber.ToString(),
                     NewsText = TextGenerator(random.Next(10), 10)
                 });
             }
@@ -63,5 +65,6 @@ namespace Echo.ContentTypes
                 return _news[i];
             }
         }
+
     }
 }

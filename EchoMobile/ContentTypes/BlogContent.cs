@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Echo.ContentTypes
 {
     public class BlogContent
     {
-        private readonly List<BlogItem> _blogs;
+        private List<BlogItem> _blogs;
         public DateTime ContentDay;
 
         public BlogContent(DateTime day)
@@ -26,7 +27,7 @@ namespace Echo.ContentTypes
                 _blogs.Add(new BlogItem
                 {
                     BlogId = Guid.NewGuid(),
-                    BlogDate = ContentDay.Date,
+                    BlogDate = DateTime.Now,
                     BlogTitle = TextGenerator(1, 10),
                     BlogAuthor = new PersonItem
                     {
@@ -64,7 +65,8 @@ namespace Echo.ContentTypes
         {
             get
             {
-                _blogs.Reverse();
+                //_blogs.Reverse();
+                _blogs = _blogs.OrderByDescending(b => b.BlogDate).ToList();
                 return _blogs[i];
             }
         }

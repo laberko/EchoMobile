@@ -15,7 +15,15 @@ namespace Echo
 {
     public static class Common
     {
+        public static int NewsNumber = 0;
         public static List<BlogContent> blogContent;
         public static List<NewsContent> newsContent;
+        public static List<Android.Support.V4.App.Fragment> fragmentList;
+        public static NewsView News;
+    }
+
+    public static class MenuItems
+    {
+        
     }
 }
