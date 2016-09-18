@@ -8,4 +8,6 @@
   <string name="blog">Blogs</string>
   <string name="show">Shows</string>
   <string name="author">Author</string>
+  <string name="back">Back</string>
+  <string name="today">Today</string>
 </resources>

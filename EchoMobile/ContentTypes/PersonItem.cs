@@ -10,5 +10,53 @@ namespace Echo.ContentTypes
         public string PersonUrl;
         public string PersonPhotoUrl;
         public string PersonAbout;
+
+        public static List<PersonItem> AddDummies()
+        {
+            var list = new List<PersonItem>
+            {
+                new PersonItem
+                {
+                    PersonName = "Юлия Латынина",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/783858.jpg"
+                },
+                new PersonItem
+                {
+                    PersonName = "Виктор Шендерович",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/1350821.jpg"
+                },
+                new PersonItem
+                {
+                    PersonName = "Алексей Венедиктов",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/680010.jpg"
+                },
+                new PersonItem
+                {
+                    PersonName = "Евгения Альбац",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/2429344.jpg"
+                },
+                new PersonItem
+                {
+                    PersonName = "Александр Плющев",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/684261.gif"
+                },
+                new PersonItem
+                {
+                    PersonName = "Матвей Ганапольский",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/815830.jpg"
+                },
+                new PersonItem
+                {
+                    PersonName = "Сергей Пархоменко",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/737220.jpg"
+                },
+                new PersonItem
+                {
+                    PersonName = "Татьяна Фельгенгауэр",
+                    PersonPhotoUrl = "http://echo.msk.ru/files/avatar2/804601.jpg"
+                }
+            };
+            return list;
+        }
     }
 }

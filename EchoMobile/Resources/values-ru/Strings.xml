@@ -8,4 +8,6 @@
   <string name="blog">Блоги</string>
   <string name="show">Передачи</string>
   <string name="author">Автор</string>
+  <string name="back">Назад</string>
+  <string name="today">Сегодня</string>
 </resources>

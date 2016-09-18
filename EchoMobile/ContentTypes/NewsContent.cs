@@ -2,35 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Echo.ContentTypes
 {
     public class NewsContent
     {
-        private List<NewsItem> _news;
+        public List<NewsItem> News;
         public DateTime ContentDay;
 
         public NewsContent(DateTime day)
         {
-            _news = new List<NewsItem>();
+            News = new List<NewsItem>();
             ContentDay = day;
-            //populate list with dummy items
+            //populate list with dummy items for debug
+            //ThreadPool.QueueUserWorkItem(o => AddDummy(10));
             AddDummy(10);
         }
 
         public void AddDummy(int number)
         {
-            var random = new Random();
             for (var i = 0; i < number; i++)
             {
+                var random = new Random();
                 Common.NewsNumber++;
-                _news.Add(new NewsItem
+                News.Add(new NewsItem
                 {
                     NewsId = Guid.NewGuid(),
-                    NewsDateTime = ContentDay.Date==DateTime.Now.Date?DateTime.Now:ContentDay,
-                    NewsTitle = Common.NewsNumber.ToString(),
-                    NewsText = TextGenerator(random.Next(10), 10)
+                    NewsDateTime = ContentDay.Date==DateTime.Now.Date?DateTime.Now : ContentDay.Date.AddHours(random.Next(23)).AddMinutes(random.Next(59)),
+                    NewsTitle = Common.NewsNumber + TextGenerator(2, 10),
+                    NewsText = TextGenerator(100, 10)
                 });
             }
         }
@@ -54,17 +54,17 @@ namespace Echo.ContentTypes
             return sb.ToString();
         }
 
-        public int NewsCount => _news.Count;
+        public int NewsCount => News.Count;
 
-        // Indexer (read only) for accessing a blog item
+        //indexer (read only) for accessing a blog item
         public NewsItem this[int i]
         {
             get
             {
-                _news = _news.OrderByDescending(n=>n.NewsDateTime).ToList();
-                return _news[i];
+                if (News.Count == 0) return null;
+                News = News.OrderByDescending(n => n.NewsDateTime).ToList();
+                return News[i];
             }
         }
-
     }
 }
