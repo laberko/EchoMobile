@@ -10,9 +10,7 @@ namespace Echo.Blog
     // that is displayed in a row of the RecyclerView:
     public class BlogViewHolder : RecyclerView.ViewHolder
     {
-        //change:
-        public TextView Picture { get; private set; }
-
+        public ImageView Picture { get; private set; }
         public TextView Author { get; private set; }
         public TextView Title { get; private set; }
         public string Id;
@@ -25,7 +23,7 @@ namespace Echo.Blog
             Author = itemView.FindViewById<TextView>(Resource.Id.blogAuthor);
 
             //change:
-            Picture = itemView.FindViewById<TextView>(Resource.Id.blogPic);
+            Picture = itemView.FindViewById<ImageView>(Resource.Id.blogCardPic);
 
             // Detect user clicks on the item view and report which item was clicked to the listener
             itemView.Click += (sender, e) =>

@@ -3,44 +3,35 @@ using System.Collections.Generic;
 using Android.OS;
 using Android.Support.V4.App;
 using Android.Views;
-using Fragment = Android.Support.V4.App.Fragment;
-using FragmentManager = Android.Support.V4.App.FragmentManager;
 
 namespace Echo
 {
     public class EchoFragmentPagerAdapter : FragmentPagerAdapter
     {
-        private readonly List<Fragment> _fragmentList;
-        private readonly FragmentManager _fm;
-
         public EchoFragmentPagerAdapter(FragmentManager fm) : base(fm)
         {
             if (Common.FragmentList == null)
             {
-                Common.FragmentList = new List<Fragment>();
+                Common.FragmentList = new List<EchoViewPagerFragment>();
             }
-            _fragmentList = Common.FragmentList;
-            _fm = fm;
         }
 
-        public override int Count => _fragmentList.Count;
+        public override int Count => Common.FragmentList.Count;
 
         public override Fragment GetItem(int position)
         {
-            return _fragmentList.Count != 0 ? _fragmentList[position] : null;
+            return Common.FragmentList.Count != 0 ? Common.FragmentList[position] : null;
         }
 
         public override int GetItemPosition(Java.Lang.Object objectValue)
         {
-            //var fragment = (Fragment) objectValue;
-            //var fragments = _fm.Fragments;
-            //return fragments.Contains(fragment) ? PositionNone : PositionUnchanged;
-            return PositionNone;
+            var fragment = (EchoViewPagerFragment)objectValue;
+            return Common.FragmentList.IndexOf(fragment) == Common.CurrentPosition ? PositionNone : PositionUnchanged;
         }
 
-        public void AddFragmentView(Func<LayoutInflater, ViewGroup, Bundle, View> view)
+        public static void AddFragmentView(Func<LayoutInflater, ViewGroup, Bundle, View> view)
         {
-            _fragmentList.Add(new EchoViewPagerFragment(view));
+            Common.FragmentList.Add(new EchoViewPagerFragment(view));
         }
     }
 }

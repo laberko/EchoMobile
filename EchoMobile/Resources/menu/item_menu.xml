@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?> 
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
  <item
       android:id="@+id/back"
       android:icon="@drawable/right"
-      android:showAsAction="always"
+      app:showAsAction="always"
       android:title="@string/back" />
 </menu>

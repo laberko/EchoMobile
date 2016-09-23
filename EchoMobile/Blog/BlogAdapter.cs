@@ -1,4 +1,5 @@
 using System;
+using Android.Graphics;
 using Android.Support.V7.Widget;
 using Android.Views;
 using Echo.ContentTypes;
@@ -21,24 +22,21 @@ namespace Echo.Blog
         }
 
         // Fill in the contents of the blog card
-        public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
+        public override async void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
         {
+            Common.IsSwiping = true;
             var viewHolder = holder as BlogViewHolder;
-            if ((viewHolder == null) || (Content.BlogCount == 0)) return;
-            //viewHolder.Date.Text = Content[position].NewsDateTime.ToString("t");
-
-            //change:
-            //viewHolder.Picture.Text = Content[position].BlogAuthor.PersonPhotoUrl;
-            viewHolder.Picture.Text = "PIC";
-
+            if ((viewHolder == null) || (Content.Blogs.Count == 0)) return;
+            viewHolder.Picture.SetImageBitmap(await Common.GetImageBitmapFromUrlAsync(Content[position].BlogAuthor.PersonPhotoUrl, Common.DisplayWidth / 4));
             viewHolder.Author.Text = Content[position].BlogAuthor.PersonName;
+            viewHolder.Author.SetTextColor(Color.ParseColor(Common.colorAccent[1]));
             viewHolder.Title.Text = Content[position].BlogTitle;
             viewHolder.Id = Content[position].BlogId.ToString();
-
+            Common.IsSwiping = false;
         }
 
         // Return the number of blogs available
-        public override int ItemCount => Content?.BlogCount ?? 0;
+        public override int ItemCount => Content?.Blogs.Count ?? 0;
 
         //item click event handler
         private void OnClick(string id)

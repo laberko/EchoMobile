@@ -1,84 +1,99 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 using Android.Content;
+using Android.Support.V4.Widget;
 using Android.Support.V7.Widget;
+using Android.Views;
 using Echo.ContentTypes;
-using Timer = System.Timers.Timer;
 
 namespace Echo.Blog
 {
-    public class BlogView : IDisposable
+    public class BlogView
     {
         private DateTime _contentDay;
-        private readonly Timer _activityTimer;
-        private readonly BlogAdapter _blogAdapter;
-        private BlogContent _blogContent;
+        private readonly BlogAdapter _adapter;
+        private readonly BlogContent _content;
         private readonly Context _context;
+        private readonly StaggeredGridLayoutManager _layoutManager;
 
-        public BlogView(DateTime day, RecyclerView rView, Context context)
+        public BlogView(DateTime day, View view, Context context)
         {
             _context = context;
             _contentDay = day;
-            //get existing news from site
-            GetBlogs();
 
-            rView.SetLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.Vertical));
-            _blogAdapter = new BlogAdapter {Content = _blogContent};
-            _blogAdapter.ItemClick += OnItemClick;
-            rView.SetAdapter(_blogAdapter);
-
-            _activityTimer = new Timer
+            //get existing news from site:
+            //find blogContent for selected date
+            _content = Common.BlogContentList.Find(b => b.ContentDay.Date == _contentDay.Date);
+            if (_content == null)
             {
-                Interval = 5111
+                //if not found - create new
+                _content = new BlogContent(_contentDay);
+                Common.BlogContentList.Add(_content);
+                _content.GetContent(10);
+            }
+
+            _adapter = new BlogAdapter
+            {
+                Content = _content,
             };
-            _activityTimer.Elapsed += OnTimer;
-            _activityTimer.Start();
+            _adapter.ItemClick += OnItemClick;
+
+            _layoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.Vertical);
+
+            var rView = view.FindViewById<RecyclerView>(Resource.Id.recycler_view);
+            rView.SetLayoutManager(_layoutManager);
+            rView.SetAdapter(_adapter);
+
+            rView.AddOnScrollListener(new EchoRecyclerViewListener());
+
+            var refresher = view.FindViewById<SwipeRefreshLayout>(Resource.Id.refresher);
+            refresher.Refresh += delegate
+            {
+                UpdateContent();
+                refresher.Refreshing = false;
+            };
+
+            UpdateView();
         }
 
         //open full blog on blog card click
         private void OnItemClick(object sender, string id)
         {
-            var guid = Guid.Parse(id);
-            var blog = _blogContent.Blogs.FirstOrDefault(b => b.BlogId == guid);
-            if (blog == null) return;
-            var blogIntent = new Intent(_context, typeof (BlogActivity));
-            blogIntent.PutExtra("Date", blog.BlogDate.ToString("d MMMM"));
-            blogIntent.PutExtra("Author", blog.BlogAuthor.PersonId.ToString());
-            blogIntent.PutExtra("Title", blog.BlogTitle);
-            blogIntent.PutExtra("Text", blog.BlogText);
-            _context.StartActivity(blogIntent);
+            //try
+            //{
+                var guid = Guid.Parse(id);
+                var blog = _content.Blogs.FirstOrDefault(b => b.BlogId == guid);
+                if (blog == null) return;
+                var blogIntent = new Intent(_context, typeof (BlogActivity));
+                blogIntent.PutExtra("Date", blog.BlogDate.Date == DateTime.Now.Date ? string.Empty : blog.BlogDate.ToString("d MMMM"));
+                blogIntent.PutExtra("Author", blog.BlogAuthor.PersonId.ToString());
+                blogIntent.PutExtra("Title", blog.BlogTitle);
+                blogIntent.PutExtra("Text", blog.BlogText);
+                _context.StartActivity(blogIntent);
+            //}
+            //catch (Exception ex) when (ex is ArgumentNullException || ex is FormatException)
+            //{
+            //    Toast.MakeText(_context, ex.Message, ToastLength.Short);
+            //}
         }
 
-        //get content from site on timer
-        private void OnTimer(object sender, ElapsedEventArgs e)
+        //get content from site
+        public void UpdateContent()
         {
-            if ((Common.CurrentPosition != 1) || (_blogContent == null) || (_contentDay.Date != DateTime.Now.Date) || (_blogAdapter == null)) return;
-            //ThreadPool.QueueUserWorkItem(o => _newsContent.AddDummy(1));
-            _blogContent.AddDummy(1);
-            if ((!Common.IsSwiping) && (Common.pagerAdapter!=null) && (Common.FragmentList.Count != 0))
+            if ((Common.CurrentPosition != 1) || (_content == null) || (_contentDay.Date != DateTime.Now.Date)) return;
+            _content.GetContent(1);
+        }
+
+        public void UpdateView()
+        {
+            if (Common.IsSwiping) return;
+            _adapter?.NotifyItemRangeInserted(0, _content.NewContent.Count);
+            _content.NewContent.Clear();
+            var firstItem = _layoutManager.FindViewByPosition(1);
+            if ((firstItem != null) && (firstItem.IsShown))
             {
-                Common.pagerAdapter.NotifyDataSetChanged();
+                _layoutManager.ScrollToPosition(0);
             }
-        }
-
-        //get blogs from site - BlogContent instance
-        private void GetBlogs()
-        {
-            //find blogContent for selected date
-            _blogContent = Common.BlogContentList.Find(b => b.ContentDay.Date == _contentDay.Date);
-            if (_blogContent != null) return;
-            //if not found - create new
-            _blogContent = new BlogContent(_contentDay);
-            Common.BlogContentList.Add(_blogContent);
-        }
-
-        public void Dispose()
-        {
-            _blogAdapter.Dispose();
-            _activityTimer.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

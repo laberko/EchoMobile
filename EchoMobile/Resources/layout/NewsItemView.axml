@@ -1,35 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    <Toolbar
-        android:id="@+id/toolbar_top"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?android:attr/actionBarSize"
-        android:background="?android:attr/colorPrimary"
-        android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar"
-        android:popupTheme="@android:style/ThemeOverlay.Material.Light" />
-    <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:layout_scrollFlags="scroll|enterAlways" />
+    </android.support.design.widget.AppBarLayout>
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/scroll"
         android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:visibility="visible">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+              >
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text=""
                 android:textStyle="bold"
                 android:id="@+id/newsTitle"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginLeft="4dp" />
+                app:layout_gravity="fill_horizontal" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -38,8 +47,7 @@
                 android:textColor="#333333"
                 android:typeface="serif"
                 android:id="@+id/newsText"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginLeft="4dp" />
+                app:layout_gravity="fill_horizontal" />
         </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
+</android.support.design.widget.CoordinatorLayout>

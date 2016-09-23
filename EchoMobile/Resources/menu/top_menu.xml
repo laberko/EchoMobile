@@ -1,18 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?> 
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      >
  <item
       android:id="@+id/top_menu_news"
       android:icon="@drawable/news_black"
-      android:showAsAction="ifRoom"
-      android:title="@string/news" />
+      android:title="@string/news"
+      app:showAsAction="ifRoom"
+      />
   <item
       android:id="@+id/top_menu_blog"
       android:icon="@drawable/blog_black"
-      android:showAsAction="ifRoom"
-      android:title="@string/blog" />
+      android:title="@string/blog"
+      app:showAsAction="ifRoom"
+      />
   <item
      android:id="@+id/top_menu_show"
      android:icon="@drawable/show_black"
-     android:showAsAction="ifRoom"
-     android:title="@string/show" />
+     android:title="@string/show"
+     app:showAsAction="ifRoom"
+     />
 </menu>

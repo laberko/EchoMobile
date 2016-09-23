@@ -1,34 +1,38 @@
 ﻿using System;
 using Android.App;
+using Android.Graphics;
 using Android.OS;
+using Android.Support.V7.App;
 using Android.Views;
 using Android.Widget;
-using Toolbar = Android.Widget.Toolbar;
+using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 namespace Echo.Blog
 {
     //activity to open a full blog item
     [Activity (Label = "@string/app_name", Icon = "@drawable/icon")]
-	public class BlogActivity : Activity
+	public class BlogActivity : AppCompatActivity
     {
-        protected override void OnCreate (Bundle bundle)
+        protected override async void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
             SetContentView(Resource.Layout.BlogItemView);
-            SetActionBar(FindViewById<Toolbar>(Resource.Id.toolbar_top));
-            ActionBar.Subtitle = Intent.GetStringExtra("Date");
+            var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
+
+            toolbar.SetBackgroundColor(Color.ParseColor(Common.colorPrimary[1]));
+            Window.SetNavigationBarColor(Color.ParseColor(Common.colorPrimaryDark[1]));
+            Window.SetStatusBarColor(Color.ParseColor(Common.colorPrimaryDark[1]));
+
+            SetSupportActionBar(toolbar);
+            SupportActionBar.Subtitle = Intent.GetStringExtra("Date");
 
             var author = Common.PersonList.Find(p => p.PersonId == Guid.Parse(Intent.GetStringExtra("Author")));
 
-            ActionBar.Title = author.PersonName;
+            SupportActionBar.Title = author.PersonName;
 
-            //change:
-            var pictureView = FindViewById<TextView>(Resource.Id.blogPic);
-            //pictureView.Text = author.PersonPhotoUrl;
-            pictureView.Text = "PIC";
+            var pictureView = FindViewById<ImageView>(Resource.Id.blogPic);
+            pictureView.SetImageBitmap(await Common.GetImageBitmapFromUrlAsync(author.PersonPhotoUrl, Common.DisplayWidth / 3));
 
-            var authorTextView = FindViewById<TextView>(Resource.Id.blogAuthor);
-            authorTextView.Text = author.PersonName;
             var titleTextView = FindViewById<TextView>(Resource.Id.blogTitle);
             titleTextView.Text = Intent.GetStringExtra("Title");
             var mainTextView = FindViewById<TextView>(Resource.Id.blogText);

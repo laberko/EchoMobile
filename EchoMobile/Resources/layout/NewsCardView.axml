@@ -3,25 +3,25 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <android.support.v7.widget.CardView
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <GridLayout
             android:layout_width="match_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="match_parent"
             android:columnCount="2"
             android:alignmentMode="alignBounds"
-            android:useDefaultMargins="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
             android:clipToPadding="true"
             android:fitsSystemWindows="true">
             <TextView
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="?android:attr/colorPrimaryDark"
                 android:text=""
                 android:id="@+id/newsDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="left|fill"
-                android:layout_marginLeft="4dp" />
+                />
             <TextView
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#333333"
@@ -30,7 +30,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="left|fill"
-                android:layout_marginLeft="8dp" />
+                android:layout_marginLeft="4dp" />
         </GridLayout>
     </android.support.v7.widget.CardView>
 </FrameLayout>

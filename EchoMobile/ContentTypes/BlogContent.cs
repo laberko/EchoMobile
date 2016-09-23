@@ -1,38 +1,69 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Echo.ContentTypes
 {
-    public class BlogContent
+    public class BlogContent : INotifyPropertyChanged
     {
-        public List<BlogItem> Blogs;
+        private List<BlogItem> _blogs;
+        public readonly List<BlogItem> NewContent;
         public DateTime ContentDay;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public BlogContent(DateTime day)
         {
             Blogs = new List<BlogItem>();
+            NewContent = new List<BlogItem>();
             ContentDay = day;
             //populate list with dummy items
-            AddDummy(10);
+            //GetContent(10);
         }
 
-        public void AddDummy(int number)
+        public List<BlogItem> Blogs
         {
-            var random = new Random();
+            get
+            {
+                return _blogs;
+            }
+            private set
+            {
+                _blogs = value;
+                if (!Common.IsSwiping)
+                {
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+
+        public void GetContent(int number)
+        {
             for (var i = 0; i < number; i++)
             {
-                Blogs.Add(new BlogItem
+                var random = new Random();
+                NewContent.Add(new BlogItem
                 {
                     BlogId = Guid.NewGuid(),
                     BlogDate = ContentDay.Date == DateTime.Now.Date ? DateTime.Now : ContentDay.Date.AddHours(random.Next(23)).AddMinutes(random.Next(59)),
                     BlogTitle = TextGenerator(1, 10),
                     BlogAuthor = Common.PersonList.ElementAt(random.Next(0, Common.PersonList.Count)),
-                    BlogText = TextGenerator(random.Next(10), 10)
+                    BlogText = TextGenerator(random.Next(10, 100), 10)
                 });
             }
+
+            if (NewContent.Count == 0) return;
+            var list = Blogs;
+            list.AddRange(NewContent);
+            Blogs = list.Distinct().ToList();
         }
 
         private static string TextGenerator(int sentenceCount, int wordCount)
@@ -54,13 +85,14 @@ namespace Echo.ContentTypes
             return sb.ToString();
         }
 
-        public int BlogCount => Blogs.Count;
+        //public int BlogCount => Blogs.Count;
 
         // Indexer (read only) for accessing a blog item
         public BlogItem this[int i]
         {
             get
             {
+                if (Blogs.Count == 0) return null;
                 Blogs = Blogs.OrderByDescending(b => b.BlogDate).ToList();
                 return Blogs[i];
             }

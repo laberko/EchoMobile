@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Timers;
 using Android.App;
 using Android.Content.PM;
 using Android.OS;
-using Android.Support.V4.App;
-using Android.Support.V4.View;
-using Android.Support.V7.Widget;
 using Android.Views;
-using Toolbar = Android.Widget.Toolbar;
+using Toolbar = Android.Support.V7.Widget.Toolbar;
 using Android.Support.Design.Widget;
+using Android.Support.V7.App;
 using Echo.Blog;
 using Echo.ContentTypes;
 using Echo.News;
@@ -16,55 +16,34 @@ using Echo.News;
 namespace Echo
 {
     [Activity(Label = "@string/app_name", MainLauncher = true, Icon = "@drawable/icon", ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-    public class MainActivity : FragmentActivity
+    public class MainActivity : AppCompatActivity
     {
-        private ViewPager _pager;
+        private EchoViewPager _pager;
         private FloatingActionButton _fab;
         private EventHandler _fabClickHandler;
+        private Timer _refreshTimer;
+        private const int Timeout = 10000;
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
 
-            //add dummy authors
+            Common.window = Window;
+            Common.DisplayWidth = Resources.DisplayMetrics.WidthPixels;
+
+            _refreshTimer = new Timer
+            {
+                Interval = Timeout
+            };
+            _refreshTimer.Elapsed += OnTimer;
+            _refreshTimer.Start();
+
+            //add dummy authors - for debug
             Common.PersonList = PersonItem.AddDummies();
 
             SetContentView(Resource.Layout.Main);
 
-            _pager = FindViewById<EchoViewPager>(Resource.Id.pager);
-            _pager.OffscreenPageLimit = 2;
-            _fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
-            _fabClickHandler = (sender, args) =>
-            {
-                var frag = DatePickerFragment.NewInstance(delegate (DateTime date)
-                {
-                    switch (Common.CurrentPosition)
-                    {
-                        case 0:
-                            Common.NewsDay = date;
-                            break;
-                        case 1:
-                            Common.BlogDay = date;
-                            break;
-                        default:
-                            break;
-                    }
-                    Common.toolbar.Subtitle = date.Date == DateTime.Now.Date ? Resources.GetString(Resource.String.today) : date.ToString("m");
-                    Common.pagerAdapter.NotifyDataSetChanged();
-                });
-                frag.Show(FragmentManager, DatePickerFragment.TAG);
-            };
-            _fab.Click += _fabClickHandler;
-
-
-
-            Common.toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
-            SetActionBar(Common.toolbar);
-
-            if (Common.pagerAdapter == null)
-            {
-                Common.pagerAdapter = new EchoFragmentPagerAdapter(SupportFragmentManager);
-            }
+            //collections of daily content
             if (Common.BlogContentList == null)
             {
                 Common.BlogContentList = new List<BlogContent>();
@@ -74,39 +53,57 @@ namespace Echo
                 Common.NewsContentList = new List<NewsContent>();
             }
 
+            //viewpager
+            _pager = FindViewById<EchoViewPager>(Resource.Id.pager);
+
+            //floating action button (calendar)
+            _fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
+            _fabClickHandler = (sender, args) =>
+            {
+                var frag = DatePickerFragment.NewInstance(delegate (DateTime date)
+                {
+                    Common.SelectedDates[Common.CurrentPosition] = date;
+                    Common.toolbar.Subtitle = date.Date == DateTime.Now.Date ? Resources.GetString(Resource.String.today) : date.ToString("m");
+                    Common.pagerAdapter.NotifyDataSetChanged();
+                });
+                frag.Show(FragmentManager, DatePickerFragment.TAG);
+            };
+            _fab.Click += _fabClickHandler;
+            Common.fab = _fab;
+
+            //toolbar
+            Common.toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
+            SetSupportActionBar(Common.toolbar);
+
+            //viewpager adapter
+            if (Common.pagerAdapter == null)
+            {
+                Common.pagerAdapter = new EchoFragmentPagerAdapter(SupportFragmentManager);
+            }
+
             //add news fragment to ViewPager adapter
-            Common.pagerAdapter.AddFragmentView((i, v, b) =>
+            EchoFragmentPagerAdapter.AddFragmentView((i, v, b) =>
             {
                 var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                var recyclerView = view.FindViewById<RecyclerView>(Resource.Id.recycler_view);
-                if (Common.News != null)
-                {
-                    Common.News.Dispose();
-                }
-                Common.News = new NewsView(Common.NewsDay, recyclerView, this);
-
+                var selectedDate = Common.SelectedDates[0];
+                Common.News = new NewsView(selectedDate, view, this);
+                //find content created by NewsView constructor and subscribe to its changes
+                Common.NewsContentList.Find(n => n.ContentDay.Date == selectedDate.Date).PropertyChanged += ContentChanged;
                 return view;
-            }
-            );
+            });
 
             //add blog fragment to ViewPager adapter
-            Common.pagerAdapter.AddFragmentView((i, v, b) =>
+            EchoFragmentPagerAdapter.AddFragmentView((i, v, b) =>
             {
                 var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                var recyclerView = view.FindViewById<RecyclerView>(Resource.Id.recycler_view);
-                if (Common.Blogs != null)
-                {
-                    Common.Blogs.Dispose();
-                }
-                Common.Blogs = new BlogView(Common.BlogDay, recyclerView, this);
-                
+                var selectedDate = Common.SelectedDates[1];
+                Common.Blogs = new BlogView(selectedDate, view, this);
+                Common.BlogContentList.Find(n => n.ContentDay.Date == selectedDate.Date).PropertyChanged += ContentChanged;
                 return view;
-            }
-            );
+            });
 
             _pager.Adapter = Common.pagerAdapter;
         }
-
 
         //populate main menu
         public override bool OnCreateOptionsMenu(IMenu menu)
@@ -117,7 +114,6 @@ namespace Echo
             Common.viewPageListener.OnPageSelected(0);
             return base.OnCreateOptionsMenu(menu);
         }
-
 
         //main menu item selected
         public override bool OnOptionsItemSelected(IMenuItem item)
@@ -139,8 +135,30 @@ namespace Echo
             return base.OnOptionsItemSelected(item);
         }
 
-        
+        private static void OnTimer(object sender, ElapsedEventArgs e)
+        {
+            Common.News.UpdateContent();
+            Common.Blogs.UpdateContent();
+        }
 
+        //e has property name
+        private void ContentChanged(object sender, PropertyChangedEventArgs e)
+        {
+            RunOnUiThread(() =>
+            {
+                switch (e.PropertyName)
+                {
+                    case "News":
+                        Common.News.UpdateView();
+                        break;
+                    case "Blogs":
+                        Common.Blogs.UpdateView();
+                        break;
+                    default:
+                        break;
+                }
+            });
 
+        }
     }
 }

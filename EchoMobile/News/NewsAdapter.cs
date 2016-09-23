@@ -1,4 +1,5 @@
 using System;
+using Android.Graphics;
 using Android.Support.V7.Widget;
 using Android.Views;
 using Echo.ContentTypes;
@@ -23,16 +24,18 @@ namespace Echo.News
         // Fill in the contents of the news card
         public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
         {
+            Common.IsSwiping = true;
             var viewHolder = holder as NewsViewHolder;
-            if ((viewHolder == null) || (Content.NewsCount == 0)) return;
-            viewHolder.Date.Text = Content[position].NewsDateTime.ToString("t");
+            if ((viewHolder == null) || (Content.News.Count == 0)) return;
+            viewHolder.Date.Text = Content[position].NewsDateTime.ToString("T");
+            viewHolder.Date.SetTextColor(Color.ParseColor(Common.colorAccent[0]));
             viewHolder.Title.Text = Content[position].NewsTitle;
             viewHolder.Id = Content[position].NewsId.ToString();
-
+            Common.IsSwiping = false;
         }
 
         // Return the number of news available
-        public override int ItemCount => Content?.NewsCount ?? 0;
+        public override int ItemCount => Content?.News.Count ?? 0;
 
         //item click event handler
         private void OnClick(string id)
