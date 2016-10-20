@@ -5,11 +5,45 @@
     android:id="@+id/refresher"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:minWidth="25px"
     android:minHeight="25px">
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:scrollbars="vertical"
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/topLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/newsProgress"
+            android:background="@android:color/transparent"
+            android:indeterminate="true"
+            android:visibility="gone"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/blogsProgress"
+            android:background="@android:color/transparent"
+            android:indeterminate="true"
+            android:visibility="gone"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/showsProgress"
+            android:background="@android:color/transparent"
+            android:indeterminate="true"
+            android:visibility="gone"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:scrollbars="vertical"
+            android:background="@android:color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </android.support.design.widget.CoordinatorLayout>
 </android.support.v4.widget.SwipeRefreshLayout>

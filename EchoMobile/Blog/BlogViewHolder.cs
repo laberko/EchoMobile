@@ -5,9 +5,7 @@ using Android.Widget;
 
 namespace Echo.Blog
 {
-    // Implement the ViewHolder pattern: each ViewHolder holds references
-    // to the UI components (TextView) within the CardView 
-    // that is displayed in a row of the RecyclerView:
+    //ViewHolder holds references to the UI components within the CardView 
     public class BlogViewHolder : RecyclerView.ViewHolder
     {
         public ImageView Picture { get; private set; }
@@ -15,17 +13,15 @@ namespace Echo.Blog
         public TextView Title { get; private set; }
         public string Id;
 
-        // Get references to the views defined in the BlogCardView layout
+        //get references to the views defined in the BlogCardView layout
         public BlogViewHolder(View itemView, Action<string> listener) : base(itemView)
         {
-            // Locate and cache view references
+            //locate and cache view references
             Title = itemView.FindViewById<TextView>(Resource.Id.blogTitle);
             Author = itemView.FindViewById<TextView>(Resource.Id.blogAuthor);
-
-            //change:
             Picture = itemView.FindViewById<ImageView>(Resource.Id.blogCardPic);
 
-            // Detect user clicks on the item view and report which item was clicked to the listener
+            //detect user clicks on the item view and report which item was clicked to the listener
             itemView.Click += (sender, e) =>
             {
                 listener(Id);

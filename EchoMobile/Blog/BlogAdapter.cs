@@ -2,41 +2,66 @@ using System;
 using Android.Graphics;
 using Android.Support.V7.Widget;
 using Android.Views;
-using Echo.ContentTypes;
 
 namespace Echo.Blog
 {
-    // Adapter to connect the data set (blog) to the RecyclerView
+    //RecyclerView adapter to connect the data set (blog) to the RecyclerView
     public class BlogAdapter : RecyclerView.Adapter
     {
         public event EventHandler<string> ItemClick;
         public BlogContent Content;
 
-        // Create a new blog CardView
+        // create a new blog CardView inside the RecyclerView
         public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
         {
-            // Inflate the CardView
+            // inflate the CardView
             var itemView = LayoutInflater.From(parent.Context).Inflate(Resource.Layout.BlogCardView, parent, false);
             var viewHolder = new BlogViewHolder(itemView, OnClick);
             return viewHolder;
         }
 
-        // Fill in the contents of the blog card
+        // fill in the contents of the blog card
         public override async void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
         {
-            Common.IsSwiping = true;
             var viewHolder = holder as BlogViewHolder;
-            if ((viewHolder == null) || (Content.Blogs.Count == 0)) return;
-            viewHolder.Picture.SetImageBitmap(await Common.GetImageBitmapFromUrlAsync(Content[position].BlogAuthor.PersonPhotoUrl, Common.DisplayWidth / 4));
-            viewHolder.Author.Text = Content[position].BlogAuthor.PersonName;
-            viewHolder.Author.SetTextColor(Color.ParseColor(Common.colorAccent[1]));
-            viewHolder.Title.Text = Content[position].BlogTitle;
-            viewHolder.Id = Content[position].BlogId.ToString();
-            Common.IsSwiping = false;
+            if ((viewHolder == null) || (Content.Blogs.Count == 0))
+                return;
+            var blog = Content[position];
+            if (blog == null)
+                return;
+            if (!string.IsNullOrEmpty(blog.BlogImageUrl))
+            {
+                if (blog.BlogImage == null)
+                {
+                    try
+                    {
+                        blog.BlogImage = await Common.GetImage(Common.DisplayWidth / 5, blog.BlogImageUrl);
+                    }
+                    catch
+                    {
+                        blog.BlogImage = null;
+                    }
+                }
+                viewHolder.Picture.SetImageBitmap(blog.BlogImage);
+            }
+            else
+                viewHolder.Picture.SetImageBitmap(null);
+            viewHolder.Author.Text = blog.BlogAuthorName;
+            viewHolder.Author.SetTextColor(Color.ParseColor(Common.ColorAccent[1]));
+            viewHolder.Author.SetBackgroundColor(Color.Transparent);
+            viewHolder.Title.Text = blog.BlogTitle;
+            viewHolder.Title.SetBackgroundColor(Color.Transparent);
+            viewHolder.Id = blog.BlogId.ToString();
         }
 
-        // Return the number of blogs available
+        //return the number of blogs available
         public override int ItemCount => Content?.Blogs.Count ?? 0;
+
+        //get stable id based on the item guid
+        public override long GetItemId(int position)
+        {
+            return BitConverter.ToInt64(Content[position].BlogId.ToByteArray(), 8);
+        }
 
         //item click event handler
         private void OnClick(string id)

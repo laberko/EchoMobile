@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">Echo of Moscow for Android</string>
+  <string name="app_name">Эхо Москвы</string>
   <string name="previous">Previous</string>
   <string name="next">Next</string>
   <string name="calendar">Calendar</string>
@@ -10,4 +10,6 @@
   <string name="author">Author</string>
   <string name="back">Back</string>
   <string name="today">Today</string>
+  <string name="moderators">Moderators</string>
+  <string name="guests">Guests</string>
 </resources>

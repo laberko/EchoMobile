@@ -6,18 +6,15 @@
       android:id="@+id/top_menu_news"
       android:icon="@drawable/news_black"
       android:title="@string/news"
-      app:showAsAction="ifRoom"
-      />
+      app:showAsAction="always"/>
   <item
       android:id="@+id/top_menu_blog"
       android:icon="@drawable/blog_black"
       android:title="@string/blog"
-      app:showAsAction="ifRoom"
-      />
+      app:showAsAction="always"/>
   <item
      android:id="@+id/top_menu_show"
      android:icon="@drawable/show_black"
      android:title="@string/show"
-     app:showAsAction="ifRoom"
-     />
+     app:showAsAction="always"/>
 </menu>

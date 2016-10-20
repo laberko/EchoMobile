@@ -1,13 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Эхо Москвы для Android</string>
+	<string name="app_name">Эхо Москвы</string>
   <string name="previous">Раньше</string>
   <string name="next">Позже</string>
   <string name="calendar">Календарь</string>
-  <string name="news">Новости Новости Новости</string>
+  <string name="news">Новости</string>
   <string name="blog">Блоги</string>
   <string name="show">Передачи</string>
   <string name="author">Автор</string>
   <string name="back">Назад</string>
   <string name="today">Сегодня</string>
+  <string name="moderators">Ведущие</string>
+  <string name="guests">Гости</string>
 </resources>
