@@ -35,7 +35,7 @@ namespace Echo.Blog
                 {
                     try
                     {
-                        blog.BlogImage = await Common.GetImage(Common.DisplayWidth / 5, blog.BlogImageUrl);
+                        blog.BlogImage = await Common.GetImage(blog.BlogImageUrl, Common.DisplayWidth / 5);
                     }
                     catch
                     {

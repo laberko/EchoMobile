@@ -6,6 +6,7 @@ using Android.OS;
 using Android.Support.Design.Widget;
 using Android.Views;
 using Android.Support.V4.View;
+using Android.Support.V7.Widget;
 using Android.Views.Animations;
 
 namespace Echo
@@ -19,18 +20,22 @@ namespace Echo
         private readonly Context _context;
         private readonly Window _window;
         private readonly DecelerateInterpolator _fabInterpolator;
+        private readonly AppBarLayout _appBar;
+        private readonly Toolbar _toolBar;
 
-        public EchoViewPageListener(Context context, IMenu menu, Window window)
+        public EchoViewPageListener(Context context, IMenu menu, Window window, AppBarLayout appBar, Toolbar toolBar)
         {
             //default position is news fragment
             CurrentPosition = 0;
             _context = context;
             _menu = menu;
             _window = window;
+            _appBar = appBar;
+            _toolBar = toolBar;
             _fabInterpolator = new DecelerateInterpolator(2);
         }
 
-        //change some properties on viewpager selection change
+        //change some properties on viewpager selection change according to current position
         public override void OnPageSelected(int position)
         {
             CurrentPosition = position;
@@ -50,25 +55,25 @@ namespace Echo
             Common.Fab.SetRippleColor(Color.ParseColor(Common.ColorAccent[position]));
             //restore floating button position
             Common.Fab.Animate().TranslationY(0).SetInterpolator(_fabInterpolator).Start();
-            Common.EchoBar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[position]));
-            Common.EchoBar.Subtitle = Common.SelectedDates[position].Date == DateTime.Now.Date
+            _toolBar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[position]));
+            _toolBar.Subtitle = Common.SelectedDates[position].Date == DateTime.Now.Date
                 ? _context.Resources.GetString(Resource.String.today)
                 : Common.SelectedDates[position].ToString("m");
-            Common.AppBar.SetExpanded(true);
+            _appBar.SetExpanded(true);
             switch (position)
             {
                 case 0:
-                    Common.EchoBar.Title = _context.Resources.GetText(Resource.String.news);
+                    _toolBar.Title = _context.Resources.GetText(Resource.String.news);
                     _menuItem = _menu.FindItem(Resource.Id.top_menu_news);
                     _menuItem.SetIcon(Resource.Drawable.news_white);
                     break;
                 case 1:
-                    Common.EchoBar.Title = _context.Resources.GetText(Resource.String.blog);
+                    _toolBar.Title = _context.Resources.GetText(Resource.String.blog);
                     _menuItem = _menu.FindItem(Resource.Id.top_menu_blog);
                     _menuItem.SetIcon(Resource.Drawable.blog_white);
                     break;
                 case 2:
-                    Common.EchoBar.Title = _context.Resources.GetText(Resource.String.show);
+                    _toolBar.Title = _context.Resources.GetText(Resource.String.show);
                     _menuItem = _menu.FindItem(Resource.Id.top_menu_show);
                     _menuItem.SetIcon(Resource.Drawable.show_white);
                     break;

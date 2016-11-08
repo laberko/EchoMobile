@@ -16,19 +16,20 @@ namespace Echo.News
     //activity to open a full news item
     [Activity (Label = "",
         Icon = "@drawable/icon",
-        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
-        LaunchMode = LaunchMode.SingleTop)]
+        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class NewsActivity : AppCompatActivity
     {
         protected async override void OnCreate (Bundle bundle)
         {
+            base.OnCreate(bundle);
+
             //no collection of daily news contents
             if (Common.NewsContentList == null)
             {
                 Finish();
                 return;
             }
-            base.OnCreate (bundle);
+            
             SetContentView(Resource.Layout.NewsItemView);
 
             var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);

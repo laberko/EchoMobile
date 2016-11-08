@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
-using Android.Media;
 using Android.OS;
 using Android.Support.V4.Content;
 using Android.Support.V7.App;
@@ -12,6 +12,7 @@ using Android.Views;
 using Android.Webkit;
 using Android.Widget;
 using Echo.Person;
+using Echo.Player;
 using XamarinBindings.MaterialProgressBar;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
@@ -22,27 +23,31 @@ namespace Echo.Show
         Icon = "@drawable/icon",
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
         LaunchMode = LaunchMode.SingleTop)]
-    public class ShowActivity : AppCompatActivity, View.IOnClickListener, SeekBar.IOnSeekBarChangeListener
+    public class ShowActivity : AppCompatActivity, SeekBar.IOnSeekBarChangeListener
     {
-        private MediaPlayer _mediaPlayer;
         private SeekBar _seekBar;
-        private Handler _seekHandler;
         private ImageButton _button;
         private ShowItem _show;
         private MaterialProgressBar _progressBar;
         private WebView _textWebView;
         private bool _playerReady;
         private bool _personsReady;
+        public EchoPlayerServiceBinder Binder;
+        private EchoPlayerServiceConnection _mediaPlayerServiceConnection;
+        private Intent _mediaPlayerServiceIntent;
+        private EchoPlayerService _echoPlayerService;
 
         protected override async void OnCreate(Bundle bundle)
         {
+            base.OnCreate(bundle);
+
             //no collection of daily shows contents
             if (Common.ShowContentList == null)
             {
                 Finish();
                 return;
             }
-            base.OnCreate(bundle);
+
             SetContentView(Resource.Layout.ShowItemView);
             var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
             toolbar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[2]));
@@ -58,9 +63,17 @@ namespace Echo.Show
             _progressBar.Visibility = ViewStates.Visible;
             _progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[2]), PorterDuff.Mode.SrcIn);
 
+            _seekBar = FindViewById<SeekBar>(Resource.Id.seekBar);
+            _seekBar.SetOnSeekBarChangeListener(this);
+            _button = FindViewById<ImageButton>(Resource.Id.showPlay);
+
             //find show with id passed to intent
-            var content = Common.ShowContentList.FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[2].Date)?.Shows;
-            _show = content?.FirstOrDefault(s => s.ShowId == Guid.Parse(Intent.GetStringExtra("ID")));
+            foreach (var c in Common.ShowContentList)
+            {
+                _show = c.Shows.FirstOrDefault(s => s.ShowId == Guid.Parse(Intent.GetStringExtra("ID")));
+                if (_show != null)
+                    break;
+            }
             if (_show == null)
             {
                 _progressBar.Visibility = ViewStates.Gone;
@@ -99,47 +112,24 @@ namespace Echo.Show
             //prepare media player with controls if the show has audio
             if (!string.IsNullOrEmpty(_show.ShowSoundUrl))
             {
-                //a handler to repeat player seek bar update
-                _seekHandler = new Handler();
-
-                _seekBar = FindViewById<SeekBar>(Resource.Id.seekBar);
-                _seekBar.SetOnSeekBarChangeListener(this);
-
-                _button = FindViewById<ImageButton>(Resource.Id.showPlay);
-                _button.SetOnClickListener(this);
-
-                _mediaPlayer = new MediaPlayer();
-                await _mediaPlayer.SetDataSourceAsync(_show.ShowSoundUrl);
-                _mediaPlayer.SetAudioStreamType(Stream.Music);
-                _mediaPlayer.Prepared += delegate
+                if (_mediaPlayerServiceConnection == null || Binder == null)
+                    InitilizeMedia();
+                _button.Click += delegate
                 {
-                    _seekBar.Max = _mediaPlayer.Duration;
-                    //start repeated seek bar update
-                    SeekUpdate();
-                    if (Intent.GetStringExtra("Action") == "Play")
-                    {
-                        //start immediately
-                        _mediaPlayer.Start();
-                        _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black));
-                    }
-                    else
-                        _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.play_black));
-                    _playerReady = true;
-                    if (_personsReady)
-                        _progressBar.Visibility = ViewStates.Gone;
+                    if (Common.EchoPlayer.GetDataSource() != _show.ShowSoundUrl)
+                        PlayerService.Show = _show;
+                    RunOnUiThread(() => _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black)));
+                    PlayerService.PlayPause();
                 };
-                _mediaPlayer.PrepareAsync();
             }
             else
             {
-                //no audio in show - hide player layout
-                var playLayout = FindViewById<TableLayout>(Resource.Id.playLayout);
-                playLayout.Visibility = ViewStates.Gone;
                 _playerReady = true;
                 if (_personsReady)
                     _progressBar.Visibility = ViewStates.Gone;
             }
 
+            #region PopulatePeopleList
             //fill moderators and guests info in the show item
             if (_show.ShowModerators.Count != _show.ShowModeratorUrls.Count)
             {
@@ -176,6 +166,87 @@ namespace Echo.Show
             }
             //fill the people list with moderators and guests
             PopulatePeopleList(_show.ShowModerators.Union(_show.ShowGuests));
+            #endregion
+
+        }
+
+        private EchoPlayerService PlayerService
+        {
+            get
+            {
+                if (Binder == null || _mediaPlayerServiceConnection == null)
+                    InitilizeMedia();
+                return _echoPlayerService ?? (_echoPlayerService = Binder?.GetMediaPlayerService());
+            }
+        }
+
+        //activity started with different intent
+        protected override void OnNewIntent(Intent intent)
+        {
+            Finish();
+            StartActivity(intent);
+        }
+
+        public void OnPlaying(object sender, EventArgs e)
+        {
+            if (Common.EchoPlayer.GetDataSource() != _show.ShowSoundUrl)
+                return;
+            //update seekbar if this show is currently playing
+            _seekBar.Max = PlayerService.Duration;
+            _seekBar.Progress = PlayerService.Position;
+        }
+
+        public void OnBuffering(object sender, EventArgs e)
+        {
+            if (Common.EchoPlayer.GetDataSource() != _show.ShowSoundUrl)
+                return;
+            _seekBar.SecondaryProgress = PlayerService.Buffered;
+        }
+
+        private void OnPlaybackStarted(object sender, string url)
+        {
+            if (url == _show.ShowSoundUrl)
+                RunOnUiThread(() => _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black)));
+        }
+
+        private void OnPlaybackPaused(object sender, string url)
+        {
+            if (url == _show.ShowSoundUrl)
+                RunOnUiThread(() => _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.play_black)));
+        }
+
+        private void InitilizeMedia()
+        {
+            _mediaPlayerServiceIntent = new Intent(ApplicationContext, typeof(EchoPlayerService));
+            //_mediaPlayerServiceConnection invokes ServiceConnected()
+            _mediaPlayerServiceConnection = new EchoPlayerServiceConnection(this, _show.ShowId);
+            BindService(_mediaPlayerServiceIntent, _mediaPlayerServiceConnection, Bind.WaivePriority);
+            StartService(_mediaPlayerServiceIntent);
+        }
+
+        public void ServiceConnected()
+        {
+            var playLayout = FindViewById<TableLayout>(Resource.Id.playLayout);
+            try
+            {
+                Common.EchoPlayer.PlaybackStarted += OnPlaybackStarted;
+                Common.EchoPlayer.PlaybackPaused += OnPlaybackPaused;
+                if (Intent.GetStringExtra("Action") == "Play")
+                    PlayerService.PlayPause();
+                _button.SetImageDrawable(!Common.EchoPlayer.IsPlaying
+                    || Common.EchoPlayer.GetDataSource() != _show.ShowSoundUrl
+                    ? ContextCompat.GetDrawable(this, Resource.Drawable.play_black)
+                    : ContextCompat.GetDrawable(this, Resource.Drawable.pause_black));
+                //show player layout (hidden by default) and hide progress bar
+                _playerReady = true;
+                if (_personsReady)
+                    _progressBar.Visibility = ViewStates.Gone;
+                playLayout.Visibility = ViewStates.Visible;
+            }
+            catch
+            {
+                Finish();
+            }
         }
 
         //populate menu
@@ -195,51 +266,22 @@ namespace Echo.Show
 
         public override void OnBackPressed()
         {
-            _mediaPlayer?.Stop();
-            _mediaPlayer?.Reset();
-            _textWebView?.OnPause();
-            Finish();
-        }
-
-        protected override void OnStop()
-        {
-            _textWebView?.OnPause();
-            base.OnStop();
-        }
-
-        protected override void OnResume()
-        {
-            _textWebView?.OnResume();
-            base.OnResume();
-        }
-
-        protected override void OnPause()
-        {
-            _textWebView?.OnPause();
-            base.OnPause();
-        }
-
-        //player button clicked
-        public void OnClick(View v)
-        {
-            if (v.Id != Resource.Id.showPlay || _mediaPlayer == null) return;
-            if (_mediaPlayer.IsPlaying)
+            if (!string.IsNullOrEmpty(_show.ShowSoundUrl))
             {
-                _mediaPlayer.Pause();
-                _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.play_black));
+                try
+                {
+                    UnbindService(_mediaPlayerServiceConnection);
+                    PlayerService.Playing -= OnPlaying;
+                    PlayerService.Buffering -= OnBuffering;
+                    Common.EchoPlayer.PlaybackStarted -= OnPlaybackStarted;
+                    Common.EchoPlayer.PlaybackPaused -= OnPlaybackPaused;
+                }
+                catch
+                {
+                    Finish();
+                }
             }
-            else
-            {
-                _mediaPlayer.Start();
-                _button.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black));
-            }
-        }
-
-        //update seek bar position every 1000 ms
-        private void SeekUpdate()
-        {
-            _seekBar.Progress = _mediaPlayer.CurrentPosition;
-            _seekHandler.PostDelayed(SeekUpdate, 1000);
+            base.OnBackPressed();
         }
 
         //fill the people list with moderators and guests
@@ -254,6 +296,11 @@ namespace Echo.Show
                 Bitmap photo;
                 try
                 {
+                    if (_show.ShowPicture == null)
+                    {
+                        _show.ShowPicture = await Common.GetImage(person.PersonPhotoUrl);
+                        PlayerService.Cover = _show.ShowPicture;
+                    }
                     photo = await person.GetPersonPhoto(Common.DisplayWidth/5);
                 }
                 catch
@@ -297,10 +344,15 @@ namespace Echo.Show
                 _progressBar.Visibility = ViewStates.Gone;
         }
 
-        public void OnProgressChanged(SeekBar seekBar, int progress, bool fromUser)
+        //seek bar progress changed by user
+        public async void OnProgressChanged(SeekBar seekBar, int progress, bool fromUser)
         {
-            if (fromUser)
-                _mediaPlayer.SeekTo(progress);
+            if (!fromUser)
+                return;
+            if (Common.EchoPlayer.GetDataSource() == _show.ShowSoundUrl)
+                await PlayerService.Seek(progress);
+            else
+                seekBar.Progress = 0;
         }
 
         public void OnStartTrackingTouch(SeekBar seekBar)

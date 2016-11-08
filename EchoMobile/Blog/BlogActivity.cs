@@ -16,21 +16,21 @@ namespace Echo.Blog
     //activity to open a full blog item
     [Activity (Label = "",
         Icon = "@drawable/icon",
-        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
-        LaunchMode = LaunchMode.SingleTop)]
+        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class BlogActivity : AppCompatActivity
     {
         private WebView _textWebView;
 
         protected override async void OnCreate (Bundle bundle)
         {
+            base.OnCreate(bundle);
+
             //no collection of daily blog contents
             if (Common.BlogContentList == null)
             {
                 Finish();
                 return;
             }
-            base.OnCreate (bundle);
             SetContentView(Resource.Layout.BlogItemView);
             var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
             toolbar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[1]));
@@ -84,7 +84,7 @@ namespace Echo.Blog
                 if (!string.IsNullOrEmpty(blog.BlogAuthor?.PersonPhotoUrl))
                     pictureView.SetImageBitmap(await blog.BlogAuthor.GetPersonPhoto(Common.DisplayWidth/3));
                 else if (!string.IsNullOrEmpty(blog.BlogImageUrl))
-                    pictureView.SetImageBitmap(await Common.GetImage(Common.DisplayWidth/3, blog.BlogImageUrl));
+                    pictureView.SetImageBitmap(await Common.GetImage(blog.BlogImageUrl, Common.DisplayWidth / 3));
             }
             catch
             {

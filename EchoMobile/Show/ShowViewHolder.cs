@@ -12,13 +12,13 @@ namespace Echo.Show
         public TextView Title { get; private set; }
         public TextView Moderators { get; private set; }
         public TextView Guests { get; private set; }
-        public ImageButton DownloadButton { get; private set; }
-        public ImageButton ListenButton { get; private set; }
+        private ImageButton DownloadButton { get; }
+        public ImageButton ListenButton { get; }
         public LinearLayoutCompat ButtonsLayout { get; private set; }
         public string Id;
 
         //get references to the views defined in the ShowCardView layout
-        public ShowViewHolder(View itemView, Action<string> listener) : base(itemView)
+        public ShowViewHolder(View itemView, Action<string> onItemClick, Action<string> onDownloadClick, Action<string> onListenClick) : base(itemView)
         {
             //locate and cache view references
             Date = itemView.FindViewById<TextView>(Resource.Id.showDate);
@@ -29,10 +29,18 @@ namespace Echo.Show
             ListenButton = ItemView.FindViewById<ImageButton>(Resource.Id.showListen);
             ButtonsLayout = ItemView.FindViewById<LinearLayoutCompat>(Resource.Id.showButtons);
 
-            //detect user clicks on the item view and report which item was clicked to the listener
+            //detect user clicks and report which item was clicked to the listeners
             itemView.Click += (sender, e) =>
             {
-                listener(Id);
+                onItemClick(Id);
+            };
+            DownloadButton.Click += (sender, e) =>
+            {
+                onDownloadClick(Id);
+            };
+            ListenButton.Click += (sender, e) =>
+            {
+                onListenClick(Id);
             };
         }
     }

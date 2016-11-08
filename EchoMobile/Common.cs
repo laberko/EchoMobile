@@ -9,17 +9,14 @@ using Echo.Show;
 using Echo.News;
 using Echo.Person;
 using HtmlAgilityPack;
-using Toolbar = Android.Support.V7.Widget.Toolbar;
 using Android.Graphics;
+using Echo.Player;
 
 namespace Echo
 {
     //common static data and methods
     public static class Common
     {
-        public static DateTime LastActive = DateTime.Now;
-        public static Toolbar EchoBar;
-        public static AppBarLayout AppBar;
         public static int DisplayWidth;
         public static FloatingActionButton Fab;
         private static int _httpConnects;                       //active http connections counter (max 10 simultaneous sessions)
@@ -28,6 +25,8 @@ namespace Echo
         public static List<NewsContent> NewsContentList;
         public static List<ShowContent> ShowContentList;
         public static DateTime[] SelectedDates;
+        public static EchoMediaPlayer EchoPlayer;
+        public static EchoPlayerServiceBinder ServiceBinder;
         public static readonly string[] ColorPrimary = { "#F44336", "#2196F3", "#4CAF50" };         //red, blue, green
         public static readonly string[] ColorPrimaryDark = { "#D32F2F", "#1976D2", "#388E3C" };
         public static readonly string[] ColorAccent = { "#B71C1C", "#0D47A1", "#1B5E20" };
@@ -103,9 +102,9 @@ namespace Echo
         }
 
         //common method to download and resize a photo
-        public static async Task<Bitmap> GetImage(int widthLimit, string url)
+        public static async Task<Bitmap> GetImage(string url, int widthLimit = 0)
         {
-            if (string.IsNullOrEmpty(url) || widthLimit <= 0 || _httpConnects > 10)
+            if (string.IsNullOrEmpty(url) || widthLimit < 0 || _httpConnects > 10)
                 return null;
             Bitmap bitmap;
             try
@@ -115,13 +114,17 @@ namespace Echo
                 using (var client = new HttpClient())
                 {
                     client.Timeout = new TimeSpan(0, 0, 10);
-                    imageBytes = await client.GetByteArrayAsync(url);
+                    imageBytes = await client.GetByteArrayAsync(url).ConfigureAwait(false);
                 }
-                if (imageBytes == null || imageBytes.Length <= 0) return null;
+                if (imageBytes == null || imageBytes.Length <= 0)
+                    return null;
                 bitmap = BitmapFactory.DecodeByteArray(imageBytes, 0, imageBytes.Length);
                 //resize bitmap to fit widthLimit
+                if (widthLimit == 0)
+                    return bitmap;
                 var ratio = (float)widthLimit / bitmap.Width;
-                bitmap = Bitmap.CreateScaledBitmap(bitmap, (int)Math.Round(ratio * bitmap.Width), (int)Math.Round(ratio * bitmap.Height), true);
+                bitmap = Bitmap.CreateScaledBitmap(bitmap, (int)Math.Round(ratio * bitmap.Width),
+                    (int)Math.Round(ratio * bitmap.Height), true);
             }
             catch
             {

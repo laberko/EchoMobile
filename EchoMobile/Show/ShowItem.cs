@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content;
 using Echo.Person;
 using HtmlAgilityPack;
 using System.Linq;
+using Android.Graphics;
 
 namespace Echo.Show
 {
@@ -26,7 +25,8 @@ namespace Echo.Show
         public List<string> ShowGuestUrls;
         private string _showText;
         public string ShowSoundUrl;
-
+        public Bitmap ShowPicture;
+        public int PlayerPosition;
 
         public ShowItem()
         {
@@ -34,28 +34,7 @@ namespace Echo.Show
             ShowGuests = new List<PersonItem>();
         }
 
-        //download mp3 file using standard Android DownloadManager
-        public void DownloadAudio(Context context)
-        {
-            var uri = new Uri(ShowSoundUrl);
-            var dm = (DownloadManager)Application.Context.GetSystemService(Context.DownloadService);
-            var request = new DownloadManager.Request(Android.Net.Uri.Parse(ShowSoundUrl));
-            request.SetDestinationInExternalFilesDir(context, Android.OS.Environment.DirectoryMusic, System.IO.Path.GetFileName(uri.LocalPath));
-            request.SetNotificationVisibility(DownloadVisibility.VisibleNotifyCompleted);
-            dm.Enqueue(request);
-        }
-
-        //open full show item
-        public void OpenShowActivity(string action, Context context)
-        {
-            var showIntent = new Intent(context, typeof(ShowActivity));
-            showIntent.SetFlags(ActivityFlags.NewTask);
-            showIntent.PutExtra("Action", action);
-            showIntent.PutExtra("ID", ShowId.ToString());
-            context.StartActivity(showIntent);
-        }
-
-        //get subtitle and text content for a show in one array
+        //get subtitle and text content for a show in one array - invoked in ShowActivity
         public async Task<string[]> GetShowContent()
         {
             //subtitle
@@ -88,6 +67,24 @@ namespace Echo.Show
             showStringBuilder.AppendLine(@"</body>");
             _showText = showStringBuilder.ToString().Replace(@"""/", @"""http://echo.msk.ru/");
             return new[] { ShowSubTitle, _showText };
+        }
+
+        public async Task<Bitmap> GetShowPicture()
+        {
+            if (ShowPicture != null)
+                return ShowPicture;
+            foreach (var url in ShowGuestUrls.Union(ShowModeratorUrls))
+            {
+                var person = await Common.GetPerson(url);
+                if (person == null)
+                    continue;
+                var picture = await Common.GetImage(person.PersonPhotoUrl);
+                if (picture == null)
+                    continue;
+                ShowPicture = picture;
+                return ShowPicture;
+            }
+            return null;
         }
     }
 }

@@ -76,7 +76,8 @@ namespace Echo.News
         public void UpdateContent()
         {
             if (_contentDay.Date == DateTime.Now.Date)
-                _content?.GetContent();
+                _content.GetContent();
+            _progressBar.Visibility = ViewStates.Invisible;
         }
 
         //update recyclerview (invoked on property changed in NewsContent by MainActivity)
@@ -85,7 +86,16 @@ namespace Echo.News
             if (_content == null || _layoutManager == null || _adapter == null || _rView == null)
                 return;
             _progressBar.Visibility = ViewStates.Invisible;
-            if (_layoutManager.ItemCount == 0 || _content.NewItemsCount == 0)
+            var hasOffScreenItems = false;
+            for (var i = 0; i < _layoutManager.ItemCount; i++)
+            {
+                var item = _layoutManager.FindViewByPosition(i);
+                if (item == null || item.IsShown)
+                    continue;
+                hasOffScreenItems = true;
+                break;
+            }
+            if (_layoutManager.ItemCount == 0 || _content.NewItemsCount == 0 || !hasOffScreenItems)
                 _adapter.NotifyDataSetChanged();
             else
             {
@@ -98,7 +108,6 @@ namespace Echo.News
                 }
                 catch
                 {
-                    _rView.GetRecycledViewPool().Clear();
                     _adapter.NotifyDataSetChanged();
                 }
             }

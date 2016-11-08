@@ -45,6 +45,7 @@
                 app:layout_gravity="fill" />
             <TableLayout
                 android:id="@+id/playLayout"
+                android:visibility="gone"
                 android:stretchColumns="0"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

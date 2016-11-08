@@ -86,8 +86,7 @@
                         android:id="@+id/showListen"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@android:color/transparent"
-                        android:src="@drawable/play_black" />
+                        android:background="@android:color/transparent"/>
                 </android.support.v7.widget.LinearLayoutCompat>
             </TableRow>
         </TableLayout>

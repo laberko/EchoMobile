@@ -15,6 +15,7 @@ using Android.Support.V7.App;
 using Echo.Blog;
 using Echo.News;
 using Echo.Person;
+using Echo.Player;
 using Echo.Show;
 
 namespace Echo
@@ -23,7 +24,8 @@ namespace Echo
         MainLauncher = true,
         Icon = "@drawable/icon",
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
-        LaunchMode = LaunchMode.SingleTop)]
+        LaunchMode = LaunchMode.SingleTop,
+        AlwaysRetainTaskState = true)]
     public class MainActivity : AppCompatActivity
     {
         private ViewPager _pager;
@@ -36,6 +38,9 @@ namespace Echo
         private NewsView _news;
         private BlogView _blogs;
         private ShowView _shows;
+        private AppBarLayout _appBar;
+        private Toolbar _toolBar;
+        private DateTime _lastActive;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -44,13 +49,17 @@ namespace Echo
             //if activity is already living under the top (previously started with different intent) - restart it
             if (!IsTaskRoot)
             {
+                Common.ServiceBinder?.GetMediaPlayerService().Stop();
                 var thisIntent = PackageManager.GetLaunchIntentForPackage(PackageName);
                 var newIntent = IntentCompat.MakeRestartActivityTask(thisIntent.Component);
                 StartActivity(newIntent);
                 FinishAffinity();
             }
             
+            //get screen width
             Common.DisplayWidth = Math.Min(Resources.DisplayMetrics.WidthPixels, Resources.DisplayMetrics.HeightPixels);
+
+            //dates for the main fragments
             Common.SelectedDates = new [] { DateTime.Now, DateTime.Now, DateTime.Now };
 
             //timer for content update
@@ -72,15 +81,17 @@ namespace Echo
                 Common.NewsContentList = new List<NewsContent>();
             if (Common.ShowContentList == null)
                 Common.ShowContentList = new List<ShowContent>();
-
+            //mediaplayer
+            if (Common.EchoPlayer == null)
+                Common.EchoPlayer = new EchoMediaPlayer();
             //viewpager adapter
             if (_pagerAdapter == null)
                 _pagerAdapter = new EchoFragmentPagerAdapter(SupportFragmentManager);
 
             //toolbar
-            Common.AppBar = FindViewById<AppBarLayout>(Resource.Id.appbar);
-            Common.EchoBar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
-            SetSupportActionBar(Common.EchoBar);
+            _appBar = FindViewById<AppBarLayout>(Resource.Id.appbar);
+            _toolBar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
+            SetSupportActionBar(_toolBar);
 
             //floating action button (calendar)
             _fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
@@ -89,7 +100,7 @@ namespace Echo
                 var frag = EchoDatePicker.NewInstance(delegate (DateTime date)
                 {
                     Common.SelectedDates[_viewPageListener.CurrentPosition] = date;
-                    Common.EchoBar.Subtitle = date.Date == DateTime.Now.Date
+                    _toolBar.Subtitle = date.Date == DateTime.Now.Date
                         ? Resources.GetString(Resource.String.today)
                         : date.ToString("m");
                     _pagerAdapter.NotifyDataSetChanged();
@@ -99,87 +110,125 @@ namespace Echo
             _fab.Click += _fabClickHandler;
             Common.Fab = _fab;
 
-                //collection of viewpager fragments
-                //add news fragment to ViewPager adapter
-                _pagerAdapter.AddFragmentView((i, v, b) =>
-                {
-                    var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                    var selectedDate = Common.SelectedDates[0];
-                    _news = new NewsView(selectedDate, view, this);
-                    var content = Common.NewsContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
-                    if (content != null)
-                        content.PropertyChanged += ContentChanged;
-                    return view;
-                }, 0);
-                //add blog fragment to ViewPager adapter
-                _pagerAdapter.AddFragmentView((i, v, b) =>
-                {
-                    var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                    var selectedDate = Common.SelectedDates[1];
-                    _blogs = new BlogView(selectedDate, view, this);
-                    var content = Common.BlogContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
-                    if (content != null)
-                        content.PropertyChanged += ContentChanged;
-                    return view;
-                }, 1);
-                //add show fragment to ViewPager adapter
-                _pagerAdapter.AddFragmentView((i, v, b) =>
-                {
-                    var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                    var selectedDate = Common.SelectedDates[2];
-                    _shows = new ShowView(selectedDate, view, this);
-                    var content = Common.ShowContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
-                    if (content != null)
-                        content.PropertyChanged += ContentChanged;
-                    return view;
-                }, 2);
+            //collection of viewpager fragments
+            //add news fragment to ViewPager adapter
+            _pagerAdapter.AddFragmentView((i, v, b) =>
+            {
+                var view = i.Inflate(Resource.Layout.PagerView, v, false);
+                var selectedDate = Common.SelectedDates[0];
+                _news = new NewsView(selectedDate, view, this);
+                var content = Common.NewsContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
+                if (content != null)
+                    content.PropertyChanged += OnContentChanged;
+                return view;
+            }, 0);
+            //add blog fragment to ViewPager adapter
+            _pagerAdapter.AddFragmentView((i, v, b) =>
+            {
+                var view = i.Inflate(Resource.Layout.PagerView, v, false);
+                var selectedDate = Common.SelectedDates[1];
+                _blogs = new BlogView(selectedDate, view, this);
+                var content = Common.BlogContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
+                if (content != null)
+                    content.PropertyChanged += OnContentChanged;
+                return view;
+            }, 1);
+            //add show fragment to ViewPager adapter
+            _pagerAdapter.AddFragmentView((i, v, b) =>
+            {
+                var view = i.Inflate(Resource.Layout.PagerView, v, false);
+                var selectedDate = Common.SelectedDates[2];
+                _shows = new ShowView(selectedDate, view, this);
+                var content = Common.ShowContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
+                if (content != null)
+                    content.PropertyChanged += OnContentChanged;
+                return view;
+            }, 2);
 
             //viewpager
             _pager = FindViewById<ViewPager>(Resource.Id.pager);
             _pager.OffscreenPageLimit = 2;
             _pager.Adapter = _pagerAdapter;
+
+            //refresh RecyclerView on Play/Pause
+            Common.EchoPlayer.PlaybackStarted += delegate
+            {
+                RunOnUiThread(() => _shows.UpdateViewOnPlay());
+            };
+            Common.EchoPlayer.PlaybackPaused += delegate
+            {
+                RunOnUiThread(() => _shows.UpdateViewOnPlay());
+            };
         }
 
         protected override void OnPause()
         {
-            _refreshTimer?.Stop();
             base.OnPause();
+            _refreshTimer?.Stop();
         }
 
         protected override void OnResume()
         {
+            base.OnResume();
             _refreshTimer?.Start();
             _news?.UpdateContent();
             _blogs?.UpdateContent();
             _shows?.UpdateContent();
-            base.OnResume();
         }
 
         protected override void OnStop()
         {
-            _refreshTimer?.Stop();
-            Common.LastActive = DateTime.Now;
             base.OnStop();
+            _refreshTimer?.Stop();
+            _lastActive = DateTime.Now;
         }
 
         protected override void OnStart()
         {
-            //if date has changed since activity was stopped
-            if (Common.LastActive.Date != DateTime.Now.Date)
-            {
-                Common.SelectedDates = new[] { DateTime.Now, DateTime.Now, DateTime.Now };
-                Common.EchoBar.Subtitle = Resources.GetString(Resource.String.today);
-                _pagerAdapter.NotifyDataSetChanged();
-                Common.LastActive = DateTime.Now;
-            }
             base.OnStart();
+            if (_lastActive.Date == DateTime.Now.Date)
+                return;
+            //if date has changed since activity was stopped
+            Common.SelectedDates = new[] { DateTime.Now, DateTime.Now, DateTime.Now };
+            _toolBar.Subtitle = Resources.GetString(Resource.String.today);
+            _pagerAdapter.NotifyDataSetChanged();
+            _lastActive = DateTime.Now;
+        }
+
+        protected override void OnRestart()
+        {
+            base.OnRestart();
+            _pagerAdapter.NotifyDataSetChanged();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            try
+            {
+                if (Common.ServiceBinder != null && Common.ServiceBinder.GetMediaPlayerService() != null)
+                {
+                    Common.ServiceBinder.GetMediaPlayerService().Stop();
+                    Common.ServiceBinder.GetMediaPlayerService().OnDestroy();
+                    Common.ServiceBinder = null;
+                }
+                if (Common.EchoPlayer == null)
+                    return;
+                Common.EchoPlayer.Reset();
+                Common.EchoPlayer.Release();
+                Common.EchoPlayer = null;
+            }
+            catch
+            {
+                // ignored
+            }
         }
 
         //populate main menu
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.top_menu, menu);
-            _viewPageListener = new EchoViewPageListener(this, menu, Window);
+            _viewPageListener = new EchoViewPageListener(this, menu, Window, _appBar, _toolBar);
             _pager.AddOnPageChangeListener(_viewPageListener);
             _viewPageListener.OnPageSelected(0);
             _pager.SetCurrentItem(0, true);
@@ -208,7 +257,30 @@ namespace Echo
             return base.OnOptionsItemSelected(item);
         }
 
-        //update content (only selected fragment will be updated)
+        public override void OnBackPressed()
+        {
+            base.OnBackPressed();
+            try
+            {
+                if (Common.ServiceBinder != null && Common.ServiceBinder.GetMediaPlayerService() != null)
+                {
+                    Common.ServiceBinder.GetMediaPlayerService().Stop();
+                    Common.ServiceBinder.GetMediaPlayerService().OnDestroy();
+                    Common.ServiceBinder = null;
+                }
+                if (Common.EchoPlayer == null)
+                    return;
+                Common.EchoPlayer.Reset();
+                Common.EchoPlayer.Release();
+                Common.EchoPlayer = null;
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+        //update content
         private void OnTimer(object sender, ElapsedEventArgs e)
         {
             RunOnUiThread(() =>
@@ -220,7 +292,7 @@ namespace Echo
         }
 
         //update fragment view on content change (e has the property name)
-        private void ContentChanged(object sender, PropertyChangedEventArgs e)
+        private void OnContentChanged(object sender, PropertyChangedEventArgs e)
         {
             RunOnUiThread(() =>
             {

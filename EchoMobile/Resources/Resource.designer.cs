@@ -2113,40 +2113,76 @@ namespace Echo
 			public const int download_white = 2130837596;
 			
 			// aapt resource value: 0x7f02005d
-			public const int icon = 2130837597;
+			public const int ic_pause_circle_outline_black_48dp = 2130837597;
 			
 			// aapt resource value: 0x7f02005e
-			public const int left = 2130837598;
+			public const int ic_pause_circle_outline_white_48dp = 2130837598;
 			
 			// aapt resource value: 0x7f02005f
-			public const int navigation_empty_icon = 2130837599;
+			public const int ic_play_circle_filled_black_48dp = 2130837599;
 			
 			// aapt resource value: 0x7f020060
-			public const int news_black = 2130837600;
+			public const int ic_play_circle_outline_black_48dp = 2130837600;
 			
 			// aapt resource value: 0x7f020061
-			public const int news_white = 2130837601;
-			
-			// aapt resource value: 0x7f020068
-			public const int notification_template_icon_bg = 2130837608;
+			public const int ic_play_circle_outline_white_48dp = 2130837601;
 			
 			// aapt resource value: 0x7f020062
-			public const int pause_black = 2130837602;
+			public const int ic_skip_next_black_48dp = 2130837602;
 			
 			// aapt resource value: 0x7f020063
-			public const int play_black = 2130837603;
+			public const int ic_skip_next_white_48dp = 2130837603;
 			
 			// aapt resource value: 0x7f020064
-			public const int play_white = 2130837604;
+			public const int ic_skip_previous_black_48dp = 2130837604;
 			
 			// aapt resource value: 0x7f020065
-			public const int right = 2130837605;
+			public const int ic_skip_previous_white_48dp = 2130837605;
 			
 			// aapt resource value: 0x7f020066
-			public const int show_black = 2130837606;
+			public const int ic_stop_black_48dp = 2130837606;
 			
 			// aapt resource value: 0x7f020067
-			public const int show_white = 2130837607;
+			public const int ic_stop_white_48dp = 2130837607;
+			
+			// aapt resource value: 0x7f020068
+			public const int icon = 2130837608;
+			
+			// aapt resource value: 0x7f020069
+			public const int icon_white = 2130837609;
+			
+			// aapt resource value: 0x7f02006a
+			public const int left = 2130837610;
+			
+			// aapt resource value: 0x7f02006b
+			public const int navigation_empty_icon = 2130837611;
+			
+			// aapt resource value: 0x7f02006c
+			public const int news_black = 2130837612;
+			
+			// aapt resource value: 0x7f02006d
+			public const int news_white = 2130837613;
+			
+			// aapt resource value: 0x7f020074
+			public const int notification_template_icon_bg = 2130837620;
+			
+			// aapt resource value: 0x7f02006e
+			public const int pause_black = 2130837614;
+			
+			// aapt resource value: 0x7f02006f
+			public const int play_black = 2130837615;
+			
+			// aapt resource value: 0x7f020070
+			public const int play_white = 2130837616;
+			
+			// aapt resource value: 0x7f020071
+			public const int right = 2130837617;
+			
+			// aapt resource value: 0x7f020072
+			public const int show_black = 2130837618;
+			
+			// aapt resource value: 0x7f020073
+			public const int show_white = 2130837619;
 			
 			static Drawable()
 			{

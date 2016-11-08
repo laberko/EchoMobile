@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Android.Graphics;
+using Echo.Person;
 using HtmlAgilityPack;
 
 namespace Echo.Show
@@ -101,8 +103,11 @@ namespace Echo.Show
                                 showAudioUrl = url;
                         }
                     }
-                    //no audio and no text - not interesting
+                    //no audio and no text - not interesting, skip
                     if (string.IsNullOrEmpty(showTextUrl) && string.IsNullOrEmpty(showAudioUrl))
+                        continue;
+                    //we already have a show with the same audio (identical) - skip this one
+                    if (allShows.Any(s => !string.IsNullOrEmpty(s.ShowSoundUrl) && s.ShowSoundUrl == showAudioUrl))
                         continue;
                     //title and people
                     var aboutDiv = div.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("aboutprogramme iblock"));

@@ -78,55 +78,55 @@
     <Reference Include="System.Core" />
     <Reference Include="Mono.Android" />
     <Reference Include="Xamarin.Android.Support.Animated.Vector.Drawable, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Animated.Vector.Drawable.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Animated.Vector.Drawable.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Animated.Vector.Drawable.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Animated.Vector.Drawable.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Compat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Compat.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Compat.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Compat.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Compat.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Core.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Core.UI.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Core.UI.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Core.UI.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Core.UI.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Core.Utils, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Core.Utils.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Core.Utils.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Core.Utils.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Core.Utils.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Design, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Design.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Design.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Design.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Design.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Fragment, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Fragment.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Fragment.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Fragment.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Fragment.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Media.Compat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Media.Compat.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Media.Compat.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Media.Compat.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Media.Compat.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.v4, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.v4.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.v4.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.v4.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.v4.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.v7.AppCompat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.v7.AppCompat.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.v7.AppCompat.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.v7.AppCompat.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.v7.AppCompat.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.v7.CardView, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.v7.CardView.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.v7.CardView.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.v7.CardView.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.v7.CardView.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.v7.GridLayout, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.v7.GridLayout.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.v7.GridLayout.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.v7.GridLayout.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.v7.GridLayout.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.v7.RecyclerView, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.v7.RecyclerView.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.v7.RecyclerView.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.v7.RecyclerView.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.v7.RecyclerView.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Support.Vector.Drawable, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1-rc1\lib\MonoAndroid70\Xamarin.Android.Support.Vector.Drawable.dll</HintPath>
+      <HintPath>..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1\lib\MonoAndroid70\Xamarin.Android.Support.Vector.Drawable.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Bindings.MaterialProgressBar, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -135,6 +135,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Player\EchoMediaPlayer.cs" />
+    <Compile Include="Player\EchoPlayerService.cs" />
+    <Compile Include="Player\EchoPlayerServiceBinder.cs" />
+    <Compile Include="Player\EchoPlayerServiceConnection.cs" />
+    <Compile Include="Player\EchoMediaSessionCallback.cs" />
+    <Compile Include="Player\EchoMediaButtonReceiver.cs" />
     <Compile Include="Show\ShowActivity.cs" />
     <Compile Include="Show\ShowAdapter.cs" />
     <Compile Include="Show\ShowContent.cs" />
@@ -467,12 +473,73 @@
     <AndroidResource Include="Resources\drawable-xhdpi\close_white.png" />
     <AndroidResource Include="Resources\drawable-xxhdpi\close_white.png" />
     <AndroidResource Include="Resources\drawable-xxxhdpi\close_white.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_skip_previous_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_skip_next_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_play_circle_filled_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_skip_previous_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_skip_next_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_play_circle_filled_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_skip_previous_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_skip_next_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_play_circle_filled_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_skip_previous_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_skip_next_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_play_circle_filled_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_skip_previous_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_skip_next_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_play_circle_filled_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_pause_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_pause_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_pause_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_pause_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_pause_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_play_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_play_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_play_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_play_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_play_circle_outline_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_pause_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_play_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_skip_next_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_skip_previous_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_pause_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_play_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_skip_next_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_skip_previous_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_pause_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_play_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_skip_next_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_skip_previous_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_pause_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_play_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_skip_next_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_skip_previous_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_pause_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_play_circle_outline_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_skip_next_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_skip_previous_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_stop_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_stop_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_stop_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\ic_stop_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_stop_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_stop_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_stop_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_stop_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_stop_white_48dp.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\ic_stop_black_48dp.png" />
+    <AndroidResource Include="Resources\drawable\icon_white.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\icon_white.png" />
+    <AndroidResource Include="Resources\drawable-mdpi\icon_white.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\icon_white.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\icon_white.png" />
+    <AndroidResource Include="Resources\drawable-xxxhdpi\icon_white.png" />
   </ItemGroup>
-  <Import Project="..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1-rc1\build\Xamarin.Android.Support.Vector.Drawable.targets" Condition="Exists('..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1-rc1\build\Xamarin.Android.Support.Vector.Drawable.targets')" />
+  <Import Project="..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1\build\Xamarin.Android.Support.Vector.Drawable.targets" Condition="Exists('..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1\build\Xamarin.Android.Support.Vector.Drawable.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Используйте восстановление пакетов NuGet, чтобы скачать их.  Дополнительную информацию см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1-rc1\build\Xamarin.Android.Support.Vector.Drawable.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1-rc1\build\Xamarin.Android.Support.Vector.Drawable.targets'))" />
+    <Error Condition="!Exists('..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1\build\Xamarin.Android.Support.Vector.Drawable.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xamarin.Android.Support.Vector.Drawable.24.2.1\build\Xamarin.Android.Support.Vector.Drawable.targets'))" />
   </Target>
 </Project>
