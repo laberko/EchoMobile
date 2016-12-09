@@ -2,49 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Android.Graphics;
-using Echo.Person;
 using HtmlAgilityPack;
+using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.Show
 {
     //shows content for a specific day
-    public class ShowContent : INotifyPropertyChanged
+    public class ShowContent : AbstractContentFactory, INotifyPropertyChanged
     {
-        private List<ShowItem> _shows;
-        public DateTime ContentDate;
-        public event PropertyChangedEventHandler PropertyChanged;
+        private readonly MaterialProgressBar _progressBar;
 
-        public ShowContent(DateTime day)
+        public ShowContent(DateTime day, MaterialProgressBar progressBar):base(day)
         {
-            _shows = new List<ShowItem>();
-            ContentDate = day;
+            _progressBar = progressBar;
             GetContent();
         }
 
-        //shows collection
-        public List<ShowItem> Shows
-        {
-            get
-            {
-                return _shows;
-            }
-            private set
-            {
-                _shows = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            //raise PropertyChanged event and pass changed property name
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         //download and parse blogs content for the date
-        public async void GetContent()
+        public override sealed async void GetContent()
         {
             var showsUpdated = false;
             var allShows = new List<ShowItem>();
@@ -73,7 +48,6 @@ namespace Echo.Show
                 var divs = node.Descendants("div");
                 foreach (var div in divs)
                 {
-                    var showSubTitle = string.Empty;
                     var moderatorNameList = new List<string>();
                     var moderatorUrlList = new List<string>();
                     var guestNameList = new List<string>();
@@ -90,7 +64,7 @@ namespace Echo.Show
                         showDateTime = ContentDate.Date.Add(showTime);
                     else
                         continue;
-                    //audio and text
+                    //audio and text urls
                     var contentDiv = div.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("linkprogramme iblock right"));
                     var contentUrls = contentDiv?.Descendants("a");
                     if (contentUrls != null)
@@ -107,7 +81,7 @@ namespace Echo.Show
                     if (string.IsNullOrEmpty(showTextUrl) && string.IsNullOrEmpty(showAudioUrl))
                         continue;
                     //we already have a show with the same audio (identical) - skip this one
-                    if (allShows.Any(s => !string.IsNullOrEmpty(s.ShowSoundUrl) && s.ShowSoundUrl == showAudioUrl))
+                    if (allShows.Any(s => !string.IsNullOrEmpty(s.ItemSoundUrl) && s.ItemSoundUrl == showAudioUrl))
                         continue;
                     //title and people
                     var aboutDiv = div.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("aboutprogramme iblock"));
@@ -118,6 +92,7 @@ namespace Echo.Show
                     var showTitle = titleNode?.InnerText.Replace("\n\t\t", string.Empty).Replace("  ", string.Empty);
                     if (showTitle == null)
                         continue;
+                    var showRootUrl = titleNode.GetAttributeValue("href", string.Empty);
                     var personsDiv = aboutDiv.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("persons"));
                     var persons = personsDiv?.Descendants("a");
                     if (persons != null)
@@ -136,18 +111,18 @@ namespace Echo.Show
                             moderatorNameList.Add(person.Descendants("b").FirstOrDefault()?.InnerText);
                         }
                     }
-                    var show = new ShowItem
+                    var show = new ShowItem(Common.ContentType.Show)
                     {
-                        ShowId = Guid.NewGuid(),
-                        ShowItemUrl = showTextUrl,
-                        ShowDateTime = showDateTime,
-                        ShowTitle = showTitle,
-                        ShowSubTitle = showSubTitle,
+                        ItemId = Guid.NewGuid(),
+                        ItemUrl = showTextUrl,
+                        ItemDate = showDateTime,
+                        ItemTitle = showTitle,
                         ShowModeratorNames = moderatorNameList.Count > 0 ? "Ведущие: " + string.Join(", ", moderatorNameList) : string.Empty,
-                        ShowModeratorUrls = moderatorUrlList,
+                        ShowModeratorUrls = moderatorUrlList.Distinct().ToList(),
                         ShowGuestNames = guestNameList.Count > 0 ? "Гости: " + string.Join(", ", guestNameList) : string.Empty,
-                        ShowGuestUrls = guestUrlList,
-                        ShowSoundUrl = showAudioUrl
+                        ShowGuestUrls = guestUrlList.Distinct().ToList(),
+                        ItemSoundUrl = showAudioUrl,
+                        ItemRootUrl = !string.IsNullOrEmpty(showRootUrl) ? "http://echo.msk.ru" + showRootUrl : string.Empty
                     };
                     allShows.Add(show);
                 }
@@ -155,25 +130,28 @@ namespace Echo.Show
             foreach (var show in allShows)
             {
                 //fill the collection of new shows and replace modified ones
-                var existingShow = Shows.FirstOrDefault(s => s.ShowDateTime == show.ShowDateTime);
+                var existingShow = ContentList.FirstOrDefault(s => (s.ItemType == Common.ContentType.Show && s.ItemDate == show.ItemDate));
                 if (existingShow == null)
                     newContent.Add(show);
-                else if (existingShow.ShowItemUrl != show.ShowItemUrl || existingShow.ShowSoundUrl != show.ShowSoundUrl)
+                //text or audio was added to an existing show
+                else if (existingShow.ItemUrl != show.ItemUrl
+                    || (string.IsNullOrEmpty(existingShow.ItemSoundUrl) && !string.IsNullOrEmpty(show.ItemSoundUrl)))
                 {
-                    Shows.Remove(existingShow);
-                    Shows.Add(show);
+                    ContentList.Remove(existingShow);
+                    ContentList.Add(show);
                     showsUpdated = true;
                 }
             }
             if (newContent.Count <= 0 && !showsUpdated)
                 return;
-            var list = Shows;
+            var list = ContentList;
             list.AddRange(newContent);
             //assign Shows property to raise PropertyChanged
-            Shows = list.OrderByDescending(b => b.ShowDateTime).ToList();
+            ContentList = list.OrderByDescending(b => b.ItemDate).ToList();
+            Common.PlayList = ContentList
+                .Where(c => (c.ItemType == Common.ContentType.Show && !string.IsNullOrEmpty(c.ItemSoundUrl)))
+                .OrderBy(c => c.ItemDate).Cast<ShowItem>().ToArray();
+            _progressBar.Visibility = Android.Views.ViewStates.Gone;
         }
-
-        //indexer (read only) for accessing a show item
-        public ShowItem this[int i] => Shows.Count == 0 ? null : Shows[i];
     }
 }

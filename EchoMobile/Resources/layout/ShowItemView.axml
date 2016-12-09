@@ -31,18 +31,41 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp">
-            <TextView
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textStyle="bold"
-                android:text=""
-                android:layout_width="wrap_content"
+            <TableLayout
+                android:id="@+id/showHeader"
+                android:stretchColumns="0"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:id="@+id/showSubTitle"
-                app:layout_gravity="fill" />
+                android:clipToPadding="true"
+                android:fitsSystemWindows="true">
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginBottom="8dp">
+                    <TextView
+                        android:textStyle="bold"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:id="@+id/showSubTitle"
+                        android:layout_marginRight="8dp"
+                        app:layout_gravity="left|center_vertical"
+                        android:layout_centerVertical="true" />
+                    <ImageButton
+                        android:id="@+id/showHistoryButton"
+                        android:visibility="gone"
+                        android:src="@drawable/ic_search_black_48dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:layout_centerVertical="true" />
+                </TableRow>
+            </TableLayout>
             <TableLayout
                 android:id="@+id/playLayout"
                 android:visibility="gone"
@@ -80,8 +103,6 @@
             <WebView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text=""
                 android:textColor="#333333"
                 android:background="@android:color/transparent"
                 android:typeface="serif"

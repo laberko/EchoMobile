@@ -41,11 +41,11 @@ namespace Echo
             CurrentPosition = position;
             //set default icons
             _menuItem = _menu.FindItem(Resource.Id.top_menu_news);
-            _menuItem.SetIcon(Resource.Drawable.news_black);
+            _menuItem.SetIcon(Resource.Drawable.news_white);
             _menuItem = _menu.FindItem(Resource.Id.top_menu_blog);
-            _menuItem.SetIcon(Resource.Drawable.blog_black);
+            _menuItem.SetIcon(Resource.Drawable.blog_white);
             _menuItem = _menu.FindItem(Resource.Id.top_menu_show);
-            _menuItem.SetIcon(Resource.Drawable.show_black);
+            _menuItem.SetIcon(Resource.Drawable.show_white);
             if ((int) Build.VERSION.SdkInt > 19)
             {
                 _window.SetNavigationBarColor(Color.ParseColor(Common.ColorPrimaryDark[position]));
@@ -65,17 +65,17 @@ namespace Echo
                 case 0:
                     _toolBar.Title = _context.Resources.GetText(Resource.String.news);
                     _menuItem = _menu.FindItem(Resource.Id.top_menu_news);
-                    _menuItem.SetIcon(Resource.Drawable.news_white);
+                    _menuItem.SetIcon(Resource.Drawable.news_black);
                     break;
                 case 1:
                     _toolBar.Title = _context.Resources.GetText(Resource.String.blog);
                     _menuItem = _menu.FindItem(Resource.Id.top_menu_blog);
-                    _menuItem.SetIcon(Resource.Drawable.blog_white);
+                    _menuItem.SetIcon(Resource.Drawable.blog_black);
                     break;
                 case 2:
                     _toolBar.Title = _context.Resources.GetText(Resource.String.show);
                     _menuItem = _menu.FindItem(Resource.Id.top_menu_show);
-                    _menuItem.SetIcon(Resource.Drawable.show_white);
+                    _menuItem.SetIcon(Resource.Drawable.show_black);
                     break;
                 default:
                     break;

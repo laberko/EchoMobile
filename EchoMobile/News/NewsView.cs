@@ -30,11 +30,11 @@ namespace Echo.News
             _progressBar.Visibility = ViewStates.Visible;
 
             //get existing news from collection: find newsContent for selected date
-            _content = Common.NewsContentList.FirstOrDefault(n => n.ContentDate.Date == _contentDay.Date);
+            _content = Common.NewsContentList.FirstOrDefault(n => n.ContentDate.Date == _contentDay.Date) as NewsContent;
             if (_content == null)
             {
                 //if not found - create new
-                _content = new NewsContent(_contentDay);
+                _content = new NewsContent(_contentDay, _progressBar);
                 Common.NewsContentList.Add(_content);
             }
 
@@ -65,7 +65,7 @@ namespace Echo.News
         private void OnItemClick(object sender, string id)
         {
             Guid itemId;
-            if (!Guid.TryParse(id, out itemId) || _content.News.FirstOrDefault(n => n.NewsId == itemId) == null)
+            if (!Guid.TryParse(id, out itemId) || _content.ContentList.FirstOrDefault(n => n.ItemId == itemId) == null)
                 return;
             var intent = new Intent(_context, typeof (NewsActivity));
             intent.PutExtra("ID", id);
@@ -77,15 +77,14 @@ namespace Echo.News
         {
             if (_contentDay.Date == DateTime.Now.Date)
                 _content.GetContent();
-            _progressBar.Visibility = ViewStates.Invisible;
         }
 
         //update recyclerview (invoked on property changed in NewsContent by MainActivity)
         public void UpdateView()
         {
+            _progressBar.Visibility = ViewStates.Gone;
             if (_content == null || _layoutManager == null || _adapter == null || _rView == null)
                 return;
-            _progressBar.Visibility = ViewStates.Invisible;
             var hasOffScreenItems = false;
             for (var i = 0; i < _layoutManager.ItemCount; i++)
             {
@@ -111,6 +110,11 @@ namespace Echo.News
                     _adapter.NotifyDataSetChanged();
                 }
             }
+        }
+
+        public void HideBar()
+        {
+            _progressBar.Visibility = ViewStates.Gone;
         }
     }
 }

@@ -2,48 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using HtmlAgilityPack;
+using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.Blog
 {
     //blogs content for a specific day
-    public class BlogContent : INotifyPropertyChanged
+    public class BlogContent : AbstractContentFactory, INotifyPropertyChanged
     {
-        private List<BlogItem> _blogs;
-        public DateTime ContentDate;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public int NewItemsCount;
+        private readonly MaterialProgressBar _progressBar;
 
-        public BlogContent(DateTime day)
+        public BlogContent(DateTime day, MaterialProgressBar progressBar):base(day)
         {
-            Blogs = new List<BlogItem>();
-            ContentDate = day;
+            _progressBar = progressBar;
             GetContent();
         }
 
-        //blogs collection
-        public List<BlogItem> Blogs
-        {
-            get
-            {
-                return _blogs;
-            }
-            private set
-            {
-                _blogs = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            //raise PropertyChanged event and pass changed property name
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         //download and parse blogs content for the date
-        public async void GetContent()
+        public override sealed async void GetContent()
         {
             var allBlogs = new List<BlogItem>();
             var allBlogsUrl = ContentDate.Date == DateTime.Now.Date
@@ -72,7 +48,7 @@ namespace Echo.Blog
                 var authorHref = authorDiv?.Descendants("a").FirstOrDefault();
                 var authorPhotoSpan = authorHref?.Descendants("span").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "photo");
                 var authorImg = authorPhotoSpan?.Descendants("img").FirstOrDefault();
-                var authorPhotoUrl = authorImg?.Attributes["src"].Value.Replace("avatar_s2", "avatar");
+                var authorPhotoUrl = authorImg?.Attributes["src"].Value.Replace(@"/avatar_s2/", "/");
                 var authorNameSpan = authorHref?.Descendants("span").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "about");
                 var authorName = authorNameSpan?.Descendants("strong").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "name");
                 var blogAuthorUrl = authorDiv?.Descendants("a").FirstOrDefault().GetAttributeValue("href", string.Empty);
@@ -87,30 +63,28 @@ namespace Echo.Blog
                 var metaDiv = contentDiv.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "meta");
                 var dateSpan = metaDiv?.Descendants("span").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "datetime");
                 var blogDateString = dateSpan?.GetAttributeValue("title", string.Empty);
-                var blog = new BlogItem
+                var blog = new BlogItem(Common.ContentType.Blog)
                 {
-                    BlogId = Guid.NewGuid(),
-                    BlogItemUrl = blogUrl,
-                    BlogDate = DateTime.TryParse(blogDateString, out blogDate) ? blogDate : ContentDate,
-                    BlogTitle = blogTitle,
-                    BlogImageUrl = authorPhotoUrl == null ? "http://echo.msk.ru/files/avatar/2261876.jpg" : "http://echo.msk.ru" + authorPhotoUrl,
-                    BlogAuthorName = authorName == null ? "Эхо Москвы" : authorName.InnerText,
-                    BlogAuthorUrl = blogAuthorUrl == null ? "http://echo.msk.ru/blog/echomsk/" : "http://echo.msk.ru" + blogAuthorUrl
+                    ItemId = Guid.NewGuid(),
+                    ItemUrl = blogUrl,
+                    ItemDate = DateTime.TryParse(blogDateString, out blogDate) ? blogDate : ContentDate,
+                    ItemTitle = blogTitle,
+                    ItemPictureUrl = authorPhotoUrl == null ? "http://echo.msk.ru/files/2261876.jpg" : "http://echo.msk.ru" + authorPhotoUrl,
+                    ItemAuthorName = authorName == null ? "Эхо Москвы" : authorName.InnerText,
+                    ItemAuthorUrl = blogAuthorUrl == null ? "http://echo.msk.ru/blog/echomsk/" : "http://echo.msk.ru" + blogAuthorUrl
                 };
                 allBlogs.Add(blog);
             }
             //array of new unique blogs
-            var newContent = allBlogs.Where(blog => Blogs.All(b => b.BlogTitle != blog.BlogTitle)).ToArray();
+            var newContent = allBlogs.Where(blog => ContentList.All(b => b.ItemTitle != blog.ItemTitle)).ToArray();
             NewItemsCount = newContent.Length;
             if (NewItemsCount == 0)
                 return;
-            var list = Blogs;
+            var list = ContentList;
             list.AddRange(newContent);
             //assign Blogs property to raise PropertyChanged
-            Blogs = list.OrderByDescending(b => b.BlogDate).ToList();
+            ContentList = list.OrderByDescending(b => b.ItemDate).ToList();
+            _progressBar.Visibility = Android.Views.ViewStates.Gone;
         }
-
-        //indexer (read only) for accessing a blog item
-        public BlogItem this[int i] => Blogs.Count == 0 ? null : Blogs[i];
     }
 }

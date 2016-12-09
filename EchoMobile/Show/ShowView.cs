@@ -1,9 +1,14 @@
 using System;
 using System.Linq;
+using Android;
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.Graphics;
+using Android.Support.V4.App;
+using Android.Support.V4.Content;
 using Android.Support.V4.Widget;
+using Android.Support.V7.App;
 using Android.Support.V7.Widget;
 using Android.Views;
 using XamarinBindings.MaterialProgressBar;
@@ -20,22 +25,25 @@ namespace Echo.Show
         private readonly Context _context;
         private readonly StaggeredGridLayoutManager _layoutManager;
         private readonly MaterialProgressBar _progressBar;
+        private const string Permissions = Manifest.Permission.WriteExternalStorage;
+
 
         public ShowView(DateTime day, View view, Context context)
         {
+            if (ContextCompat.CheckSelfPermission((AppCompatActivity)context, Permissions) != Permission.Granted)
+                ActivityCompat.RequestPermissions((AppCompatActivity)context, new[] { Permissions }, 0);
             _context = context;
             _contentDay = day;
-
             _progressBar = view.FindViewById<MaterialProgressBar>(Resource.Id.showsProgress);
             _progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[2]), PorterDuff.Mode.SrcIn);
             _progressBar.Visibility = ViewStates.Visible;
 
             //get existing shows from collection: find showContent for selected date
-            _content = Common.ShowContentList.FirstOrDefault(s => s.ContentDate.Date == _contentDay.Date);
+            _content = Common.ShowContentList.FirstOrDefault(s => s.ContentDate.Date == _contentDay.Date) as ShowContent;
             if (_content == null)
             {
                 //if content not found in collection - create new
-                _content = new ShowContent(_contentDay);
+                _content = new ShowContent(_contentDay, _progressBar);
                 Common.ShowContentList.Add(_content);
             }
 
@@ -64,6 +72,16 @@ namespace Echo.Show
             };
         }
 
+        public ShowItem[] PlayList
+        {
+            get
+            {
+                return _content.ContentList
+                    .Where(c => (c.ItemType == Common.ContentType.Show && !string.IsNullOrEmpty(c.ItemSoundUrl)))
+                    .OrderBy(c => c.ItemDate).Cast<ShowItem>().ToArray();
+            }
+        }
+
         //open full show on show card click
         private void OnItemClick(object sender, string id)
         {
@@ -81,20 +99,34 @@ namespace Echo.Show
             Guid itemId;
             if (!Guid.TryParse(id, out itemId))
                 return;
-            var item = _content.Shows.FirstOrDefault(n => n.ShowId == itemId);
-            if (string.IsNullOrEmpty(item?.ShowSoundUrl))
+            var item = _content.ContentList.FirstOrDefault(n => n.ItemId == itemId);
+            if (string.IsNullOrEmpty(item?.ItemSoundUrl))
                 return;
-            var dm = (DownloadManager)Application.Context.GetSystemService(Context.DownloadService);
             try
             {
-                using (var request = new DownloadManager.Request(Android.Net.Uri.Parse(item.ShowSoundUrl)))
+                using (var dm = (DownloadManager) Application.Context.GetSystemService(Context.DownloadService))
+                using (var request = new DownloadManager.Request(Android.Net.Uri.Parse(item.ItemSoundUrl)))
                 {
-                    var uri = new Uri(item.ShowSoundUrl);
-                    request.SetDestinationInExternalFilesDir(_context,
-                        Android.OS.Environment.DirectoryMusic,
-                        System.IO.Path.GetFileName(uri.LocalPath));
-                    request.SetNotificationVisibility(DownloadVisibility.VisibleNotifyCompleted);
-                    dm.Enqueue(request);
+                    if (ContextCompat.CheckSelfPermission(_context, Permissions) == Permission.Granted)
+                    {
+                        var uri = new Uri(item.ItemSoundUrl);
+                        if (Common.FolderSettings == _context.Resources.GetString(Resource.String.music) || Common.FolderSettings == string.Empty)
+                            request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryMusic,
+                                System.IO.Path.GetFileName(uri.LocalPath));
+                        else if (Common.FolderSettings == _context.Resources.GetString(Resource.String.downloads))
+                            request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads,
+                                System.IO.Path.GetFileName(uri.LocalPath));
+                        else if (Common.FolderSettings == _context.Resources.GetString(Resource.String.documents))
+                            request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDocuments,
+                                System.IO.Path.GetFileName(uri.LocalPath));
+                        else if (Common.FolderSettings == _context.Resources.GetString(Resource.String.podcasts))
+                            request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryPodcasts,
+                                System.IO.Path.GetFileName(uri.LocalPath));
+                        request.SetNotificationVisibility(DownloadVisibility.VisibleNotifyCompleted);
+                        dm.Enqueue(request);
+                    }
+                    else
+                        ActivityCompat.RequestPermissions((AppCompatActivity)_context, new[] { Permissions }, 0);
                 }
             }
             catch
@@ -113,22 +145,23 @@ namespace Echo.Show
             if (Common.EchoPlayer != null && Common.EchoPlayer.ShowId == itemId && Common.EchoPlayer.Toggle())
                 return;
             var showIntent = new Intent(_context, typeof(ShowActivity));
-            showIntent.PutExtra("Action", "Play");
+            //extra Play means start playback immediately
+            showIntent.PutExtra("Play", true);
             showIntent.PutExtra("ID", id);
             _context.StartActivity(showIntent);
         }
 
-        //get content from site (invoked on timer by MainActivity)
+        //get content from site (invoked on timer by MainActivity) for current day only
         public void UpdateContent()
         {
             if (_contentDay.Date == DateTime.Now.Date)
                 _content.GetContent();
-            _progressBar.Visibility = ViewStates.Invisible;
         }
 
         //update recyclerview (invoked on property changed in ShowContent by MainActivity)
         public void UpdateView()
         {
+            _progressBar.Visibility = ViewStates.Gone;
             if (_layoutManager == null || _adapter == null || _rView == null)
                 return;
             try
@@ -147,6 +180,11 @@ namespace Echo.Show
         public void UpdateViewOnPlay()
         {
             _adapter.NotifyDataSetChanged();
+        }
+
+        public void HideBar()
+        {
+            _progressBar.Visibility = ViewStates.Gone;
         }
     }
 }

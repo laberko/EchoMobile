@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:columnCount="2"
-            android:rowCount="2"
+            android:rowCount="3"
             android:alignmentMode="alignBounds"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
@@ -23,32 +23,39 @@
             android:layout_marginRight="8dp"
             android:clipToPadding="true"
             android:fitsSystemWindows="true">
-            <ImageButton
-                android:id="@+id/blogCardPic"
+            <ImageView
+                android:id="@+id/showPic"
                 android:layout_row="0"
                 android:layout_column="0"
-                android:layout_rowSpan="2"
+                android:layout_rowSpan="3"
+                android:layout_marginRight="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent" />
             <TextView
+                android:layout_column="1"
                 android:layout_row="0"
-                android:layout_column="1"
                 android:textStyle="bold"
-                android:id="@+id/blogAuthor"
+                android:id="@+id/contentDate"
+                android:layout_gravity="left|fill"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|fill"
-                android:layout_marginLeft="8dp" />
+                android:layout_height="wrap_content" />
             <TextView
-                android:layout_row="1"
                 android:layout_column="1"
+                android:layout_row="1"
                 android:textColor="#333333"
-                android:id="@+id/blogTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:id="@+id/contentTitle"
                 android:layout_gravity="left|fill"
-                android:layout_marginLeft="8dp" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:layout_column="1"
+                android:layout_row="2"
+                android:textColor="#333333"
+                android:id="@+id/contentSubTitle"
+                android:layout_gravity="left|fill"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
         </GridLayout>
     </android.support.v7.widget.CardView>
 </FrameLayout>

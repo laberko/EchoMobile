@@ -11,8 +11,10 @@ using Android.OS;
 using Android.Support.V4.App;
 using Android.Support.V4.Media;
 using Android.Support.V4.Media.Session;
+using Android.Widget;
 using Echo.Show;
 using Java.Lang;
+using System.Collections.Generic;
 
 namespace Echo.Player
 {
@@ -57,7 +59,10 @@ namespace Echo.Player
         private Bitmap _cover;
         private Bitmap _compatCover;
         private NotificationCompat.Builder _builder;
+        private PlaybackStateCompat.Builder _stateBuilder;
         private bool _isFocusLost;
+        public string SearchPersonName;
+        private readonly Dictionary<string, string> _headers;
 
         public EchoPlayerService()
         {
@@ -81,6 +86,14 @@ namespace Echo.Player
                 if (MediaPlayerState == PlaybackStateCompat.StatePlaying)
                     _playingHandler.PostDelayed(_playingHandlerRunnable, 0);
             };
+
+            _headers = new Dictionary<string, string>
+            {
+                {
+                    "User-Agent",
+                    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2"
+                }
+            };
         }
 
         private int MediaPlayerState
@@ -91,8 +104,9 @@ namespace Echo.Player
                 {
                     return _mediaControllerCompat?.PlaybackState?.State ?? PlaybackStateCompat.StateNone;
                 }
-                catch
+                catch (Java.Lang.Exception ex)
                 {
+                    var x = ex.Message;
                     return PlaybackStateCompat.StateNone;
                 }
             }
@@ -102,10 +116,8 @@ namespace Echo.Player
         {
             get
             {
-                if (_mediaPlayer == null
-                    || (MediaPlayerState != PlaybackStateCompat.StatePlaying
-                        && MediaPlayerState != PlaybackStateCompat.StatePaused))
-                    return -1;
+                if (_mediaPlayer == null || MediaPlayerState == PlaybackStateCompat.StateStopped)
+                    return 0;
                 try
                 {
                     return _mediaPlayer.CurrentPosition;
@@ -149,19 +161,15 @@ namespace Echo.Player
             }
         }
 
-        public Bitmap Cover
+        private Bitmap Cover
         {
-            private get
+            get
             {
                 return _cover ?? BitmapFactory.DecodeResource(Resources, Resource.Drawable.icon);
             }
             set
             {
                 _cover = value;
-                if (MediaPlayerState != PlaybackStateCompat.StatePlaying || _mediaPlayer.GetDataSource() != Show.ShowSoundUrl)
-                    return;
-                //cover belongs to currently playing track - update notification
-                StartNotification(true);
                 UpdateMediaMetadataCompat();
             }
         }
@@ -174,6 +182,13 @@ namespace Echo.Player
             _audioManager = (AudioManager)GetSystemService(AudioService);
             _wifiManager = (WifiManager)GetSystemService(WifiService);
             _remoteComponentName = new ComponentName(PackageName, new EchoMediaButtonReceiver().ComponentName);
+            _stateBuilder = new PlaybackStateCompat.Builder().SetActions(
+                PlaybackStateCompat.ActionPause |
+                PlaybackStateCompat.ActionPlay |
+                PlaybackStateCompat.ActionPlayPause |
+                PlaybackStateCompat.ActionSkipToNext |
+                PlaybackStateCompat.ActionSkipToPrevious |
+                PlaybackStateCompat.ActionStop);
         }
 
         public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
@@ -209,6 +224,7 @@ namespace Echo.Player
 
         public override void OnDestroy()
         {
+            base.OnDestroy();
             if (_mediaPlayer != null)
             {
                 _mediaPlayer.Reset();
@@ -220,7 +236,6 @@ namespace Echo.Player
             StopForeground(true);
             ReleaseWifiLock();
             UnregisterMediaSessionCompat();
-            base.OnDestroy();
         }
 
         private void OnStatusChanged()
@@ -233,8 +248,6 @@ namespace Echo.Player
             try
             {
                 _builder.SetProgress(Duration, Position, false);
-                if (Position > 0 && Show != null)
-                    Show.PlayerPosition = Position;
                 if (_mediaPlayer.IsPlaying)
                     NotificationManagerCompat.From(ApplicationContext).Notify(NotificationId, _builder.Build());
                 Playing?.Invoke(this, EventArgs.Empty);
@@ -261,6 +274,7 @@ namespace Echo.Player
 
         public void OnCompletion(MediaPlayer mediaPlayer)
         {
+            Show.ShowPlayerPosition = 0;
             PlayNext();
         }
 
@@ -277,31 +291,37 @@ namespace Echo.Player
 
         public async void OnPrepared(MediaPlayer mediaPlayer)
         {
+            //prepare next and previous show instances
+            if (Common.PlayList == null)
+            {
+                Common.PlayList = Common.ShowContentList
+                    .FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[2].Date)?
+                    .ContentList.Where(s => !string.IsNullOrEmpty(s.ItemSoundUrl))
+                    .OrderBy(s => s.ItemDate).Cast<ShowItem>().ToArray();
+            }
+            if (Common.PlayList != null && Common.PlayList.Length > 1)
+            {
+                var currentIndex = Array.IndexOf(Common.PlayList, Show);
+                _nextShow = currentIndex == Common.PlayList.Length - 1 || currentIndex == -1
+                    ? Common.PlayList[0]
+                    : Common.PlayList[currentIndex + 1];
+                _previousShow = currentIndex == 0 || currentIndex == -1
+                    ? Common.PlayList[Common.PlayList.Length - 1]
+                    : Common.PlayList[currentIndex - 1];
+            }
+
+            Cover = await Show.GetPicture();
+
             //mediaplayer is prepared - start track playback
-            mediaPlayer.SeekTo(Show.PlayerPosition);
+            mediaPlayer.SeekTo(Show.ShowPlayerPosition);
             mediaPlayer.Start();
             UpdatePlaybackState(PlaybackStateCompat.StatePlaying);
-            Cover = await Show.GetShowPicture();
 
-            //prepare next and previous show instance
-            var content = Common.ShowContentList
-                .FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[2].Date)?
-                .Shows.Where(s => !string.IsNullOrEmpty(s.ShowSoundUrl))
-                .OrderBy(s => s.ShowDateTime).ToArray();
-            if (content == null)
-                return;
-            var currentIndex = Array.IndexOf(content, Show);
-            _nextShow = currentIndex == content.Length - 1 || currentIndex == -1
-                ? content[0]
-                : content[currentIndex + 1];
-            _previousShow = currentIndex == 0 || currentIndex == -1
-                ? content[content.Length - 1]
-                : content[currentIndex - 1];
-
-            StartNotification(true);
             //update the metadata now that we are playing
             UpdateMediaMetadataCompat();
+            StartNotification(true);
 
+            Show.ShowDuration = Duration;
         }
 
         //change volume on audio focus change
@@ -347,15 +367,15 @@ namespace Echo.Player
                 if (_mediaSessionCompat == null)
                 {
                     var showIntent = new Intent(ApplicationContext, typeof(ShowActivity));
-                    showIntent.PutExtra("ID", Show.ShowId.ToString());
+                    showIntent.PutExtra("ID", Show.ItemId.ToString());
                     var pendingIntent = PendingIntent.GetActivity(ApplicationContext, 0, showIntent, 0);
                     _remoteComponentName = new ComponentName(PackageName, new EchoMediaButtonReceiver().ComponentName);
                     _mediaSessionCompat = new MediaSessionCompat(ApplicationContext, "echomobile", _remoteComponentName, pendingIntent);
                     _mediaControllerCompat = new MediaControllerCompat(ApplicationContext, _mediaSessionCompat.SessionToken);
                 }
-                _mediaSessionCompat.Active = true;
                 _mediaSessionCompat.SetCallback(new EchoMediaSessionCallback((EchoPlayerServiceBinder)_binder));
                 _mediaSessionCompat.SetFlags(MediaSessionCompat.FlagHandlesMediaButtons | MediaSessionCompat.FlagHandlesTransportControls);
+                _mediaSessionCompat.Active = true;
             }
             catch
             {
@@ -384,39 +404,53 @@ namespace Echo.Player
             });
         }
 
-        public void Play()
+        public async void Play()
         {
             if (_mediaSessionCompat == null)
                 InitMediaSession();
-            if (_mediaPlayer == null || Show.ShowSoundUrl != _mediaPlayer.GetDataSource())
+            if (_mediaPlayer == null || Show.ItemSoundUrl != _mediaPlayer.DataSource)
                 InitializePlayer();
             try
             {
-                //player is on pause, track not changed
-                if (_mediaPlayer != null && MediaPlayerState == PlaybackStateCompat.StatePaused && Show.ShowSoundUrl == _mediaPlayer.GetDataSource())
+                //track not changed
+                if (_mediaPlayer != null && Show.ItemSoundUrl == _mediaPlayer.DataSource)
                 {
+                    //player is on pause, track not changed
+                    if (MediaPlayerState == PlaybackStateCompat.StatePaused)
+                    {
                         //start again
                         OnPrepared(_mediaPlayer);
                         return;
-                }
-
-                //player is playing, track not changed
-                if (_mediaPlayer != null && _mediaPlayer.IsPlaying && Show.ShowSoundUrl == _mediaPlayer.GetDataSource())
-                {
-                    if (Show.ShowSoundUrl == _mediaPlayer.GetDataSource())
+                    }
+                    //player is playing, track not changed
+                    if (_mediaPlayer.IsPlaying)
                     {
-                        //keep playing
-                        UpdatePlaybackState(PlaybackStateCompat.StatePlaying);
-                        return;
+                        if (Show.ItemSoundUrl == _mediaPlayer.DataSource)
+                        {
+                            //keep playing
+                            UpdatePlaybackState(PlaybackStateCompat.StatePlaying);
+                            return;
+                        }
                     }
                 }
 
                 //different track
-                _mediaPlayer.Stop();
-                UpdatePlaybackState(PlaybackStateCompat.StateStopped);
+                if (_mediaPlayer.DataSource == Show.ItemSoundUrl)
+                    Show.ShowPlayerPosition = Position;
+                if (_mediaPlayer.IsPlaying)
+                {
+                    _mediaPlayer.Stop();
+                    UpdatePlaybackState(PlaybackStateCompat.StateStopped);
+                }
                 _mediaPlayer.Reset();
-                _mediaPlayer.SetDataSource(Show.ShowSoundUrl);
-                _mediaPlayer.ShowId = Show.ShowId;
+                _mediaPlayer.SetAudioStreamType(Stream.Music);
+                //_mediaPlayer.SetDataSource(ApplicationContext, Show.GetRealSoundUrl());
+                //_mediaPlayer.SetDataSourceAsync(ApplicationContext, Show.GetRealSoundUrl());
+                var path = await Show.GetRealSoundUrl();
+                //var path = Show.ItemSoundUrl;
+                await _mediaPlayer.SetDataSourceAsync(ApplicationContext, Android.Net.Uri.Parse(path), _headers);
+                _mediaPlayer.DataSource = path;
+                _mediaPlayer.ShowId = Show.ItemId;
                 _mediaPlayer.PlayerService = this;
                 _mediaPlayer.PrepareAsync();
                 UpdatePlaybackState(PlaybackStateCompat.StateBuffering);
@@ -427,15 +461,14 @@ namespace Echo.Player
                     _wifiLock = _wifiManager.CreateWifiLock(WifiMode.Full, "echomobile_wifi_lock");
                 _wifiLock.Acquire();
             }
-            catch (IllegalStateException)
+            catch (IllegalStateException ex)
             {
             }
-            catch
+            catch (System.Exception)
             {
-                UpdatePlaybackState(PlaybackStateCompat.StateStopped);
-                _mediaPlayer?.Reset();
-                _mediaPlayer?.Release();
-                _mediaPlayer = null;
+                _mediaPlayer?.Pause();
+                Toast.MakeText(this, Resources.GetString(Resource.String.playback_error), ToastLength.Long).Show();
+                Stop();
             }
         }
 
@@ -445,7 +478,7 @@ namespace Echo.Player
             if (_mediaPlayer == null
                 || (_mediaPlayer != null && MediaPlayerState == PlaybackStateCompat.StatePaused)
                 || (_mediaPlayer != null && MediaPlayerState == PlaybackStateCompat.StateStopped)
-                || (_mediaPlayer != null && Show.ShowSoundUrl != _mediaPlayer.GetDataSource()))
+                || (_mediaPlayer != null && Show.ItemSoundUrl != _mediaPlayer.DataSource))
                 Play();
             else
                 Pause();
@@ -458,8 +491,12 @@ namespace Echo.Player
                 if (_mediaPlayer == null)
                     return;
                 if (_mediaPlayer.IsPlaying)
+                {
                     _mediaPlayer.Pause();
+                    Show.ShowPlayerPosition = Position;
+                }
                 UpdatePlaybackState(PlaybackStateCompat.StatePaused);
+                StartNotification(true);
             }
             catch
             {
@@ -473,7 +510,10 @@ namespace Echo.Player
             if (_mediaPlayer != null)
             {
                 if (_mediaPlayer.IsPlaying)
+                {
+                    //Show.ShowPlayerPosition = Position;
                     _mediaPlayer.Stop();
+                }
                 _mediaPlayer.Reset();
             }
             _audioManager.AbandonAudioFocus(this);
@@ -482,24 +522,26 @@ namespace Echo.Player
             StopForeground(true);
             ReleaseWifiLock();
             UnregisterMediaSessionCompat();
-            Show.PlayerPosition = lastPosition;
+            Show.ShowPlayerPosition = lastPosition;
         }
 
         public void PlayNext()
         {
+            //if == 0 - called from OnCompletion
+            if (Show.ShowPlayerPosition != 0)
+                Show.ShowPlayerPosition = Position;
             StartNotification(false);
-            _mediaPlayer.Stop();
-            Show.PlayerPosition = 0;
-            Show = _nextShow;
+            if (_nextShow != null)
+                Show = _nextShow;
             Play();
         }
 
         public void PlayPrevious()
         {
+            Show.ShowPlayerPosition = Position;
             StartNotification(false);
-            _mediaPlayer.Stop();
-            Show.PlayerPosition = 0;
-            Show = _previousShow;
+            if (_previousShow != null)
+                Show = _previousShow;
             Play();
         }
 
@@ -509,17 +551,8 @@ namespace Echo.Player
                 return;
             try
             {
-                var stateBuilder = new PlaybackStateCompat.Builder()
-                    .SetActions(
-                        PlaybackStateCompat.ActionPause |
-                        PlaybackStateCompat.ActionPlay |
-                        PlaybackStateCompat.ActionPlayPause |
-                        PlaybackStateCompat.ActionSkipToNext |
-                        PlaybackStateCompat.ActionSkipToPrevious |
-                        PlaybackStateCompat.ActionStop
-                    )
-                    .SetState(state, Position, 1.0f, SystemClock.ElapsedRealtime());
-                _mediaSessionCompat.SetPlaybackState(stateBuilder.Build());
+                _stateBuilder.SetState(state, Position, 1.0f, SystemClock.ElapsedRealtime());
+                _mediaSessionCompat.SetPlaybackState(_stateBuilder.Build());
                 //used for backwards compatibility
                 if ((int)Build.VERSION.SdkInt < 21)
                 {
@@ -536,8 +569,6 @@ namespace Echo.Player
                     }
                 }
                 OnStatusChanged();
-                if (state == PlaybackStateCompat.StatePlaying || state == PlaybackStateCompat.StatePaused)
-                    StartNotification(true);
             }
             catch
             {
@@ -549,12 +580,16 @@ namespace Echo.Player
         {
             if (_mediaSessionCompat == null || Show == null)
                 return;
+            //ShowActivity will be started on notification tap
             var showIntent = new Intent(ApplicationContext, typeof(ShowActivity));
-            showIntent.PutExtra("ID", Show.ShowId.ToString());
+            showIntent.PutExtra("ID", Show.ItemId.ToString());
+            //the playing show was started from a person's show search - pass his name to ShowActivity
+            if (!string.IsNullOrEmpty(SearchPersonName))
+                showIntent.PutExtra("PersonName", SearchPersonName);
             var pendingIntent = PendingIntent.GetActivity(ApplicationContext, 0, showIntent, PendingIntentFlags.UpdateCurrent);
             _builder = new NotificationCompat.Builder(ApplicationContext)
-                .SetContentTitle(Show.ShowTitle)
-                .SetContentText(Show.ShowDateTime.ToString("f"))
+                .SetContentTitle(Show.ItemTitle)
+                .SetContentText(Show.ItemDate.ToString("f"))
                 .SetContentInfo("Эхо Москвы")
                 .SetSmallIcon(Resource.Drawable.icon_white)
                 .SetContentIntent(pendingIntent)
@@ -563,12 +598,11 @@ namespace Echo.Player
                 .SetVisibility(NotificationCompat.VisibilityPublic);
             if (full)
             {
-                _builder.SetProgress(Duration, 0, false);
+                _builder.SetProgress(Duration, Position, false);
                 if ((int) Build.VERSION.SdkInt > 19)
                 {
                     _builder.SetLargeIcon(Cover);
-                    _builder.AddAction(GenerateActionCompat(Resource.Drawable.ic_skip_previous_black_48dp,
-                        ActionPrevious));
+                    _builder.AddAction(GenerateActionCompat(Resource.Drawable.ic_skip_previous_black_48dp, ActionPrevious));
                     _builder.AddAction(MediaPlayerState == PlaybackStateCompat.StatePlaying
                         ? GenerateActionCompat(Resource.Drawable.ic_pause_circle_outline_black_48dp, ActionPause)
                         : GenerateActionCompat(Resource.Drawable.ic_play_circle_outline_black_48dp, ActionPlay));
@@ -577,8 +611,7 @@ namespace Echo.Player
                 else
                 {
                     _builder.SetLargeIcon(_compatCover);
-                    _builder.AddAction(GenerateActionCompat(Resource.Drawable.ic_skip_previous_white_48dp,
-                        ActionPrevious));
+                    _builder.AddAction(GenerateActionCompat(Resource.Drawable.ic_skip_previous_white_48dp, ActionPrevious));
                     _builder.AddAction(MediaPlayerState == PlaybackStateCompat.StatePlaying
                         ? GenerateActionCompat(Resource.Drawable.ic_pause_circle_outline_white_48dp, ActionPause)
                         : GenerateActionCompat(Resource.Drawable.ic_play_circle_outline_white_48dp, ActionPlay));
@@ -607,8 +640,8 @@ namespace Echo.Player
             var metaBuilder = new MediaMetadataCompat.Builder();
             metaBuilder
                 .PutString(MediaMetadata.MetadataKeyAlbum, "Эхо Москвы")
-                .PutString(MediaMetadata.MetadataKeyArtist, Show.ShowTitle)
-                .PutString(MediaMetadata.MetadataKeyTitle, Show.ShowDateTime.ToString("f"));
+                .PutString(MediaMetadata.MetadataKeyArtist, Show.ItemTitle)
+                .PutString(MediaMetadata.MetadataKeyTitle, Show.ItemDate.ToString("f"));
             metaBuilder.PutBitmap(MediaMetadata.MetadataKeyAlbumArt, (int) Build.VERSION.SdkInt > 19 ? Cover : _compatCover);
             _mediaSessionCompat.SetMetadata(metaBuilder.Build());
         }

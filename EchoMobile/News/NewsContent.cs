@@ -2,53 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using HtmlAgilityPack;
+using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.News
 {
     //news content for a specific day
-    public class NewsContent : INotifyPropertyChanged
+    public class NewsContent : AbstractContentFactory, INotifyPropertyChanged
     {
-        private List<NewsItem> _news;
-        public DateTime ContentDate;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public int NewItemsCount;
+        private readonly MaterialProgressBar _progressBar;
 
-        public NewsContent(DateTime day)
+        public NewsContent(DateTime day, MaterialProgressBar progressBar):base(day)
         {
-            _news = new List<NewsItem>();
-            ContentDate = day;
+            _progressBar = progressBar;
             GetContent();
         }
 
-        //news collection
-        public List<NewsItem> News
-        {
-            get
-            {
-                return _news;
-            }
-            private set
-            {
-                _news = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            //raise PropertyChanged event and pass changed property name
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         //download and parse news content for the date
-        public async void GetContent()
+        public override sealed async void GetContent()
         {
             var allNewsUrl = ContentDate.Date == DateTime.Now.Date
                 ? "http://echo.msk.ru/news/"
                 : "http://echo.msk.ru/news/" + ContentDate.Year + "/" + ContentDate.Month + "/" + ContentDate.Day + ".html";
-            var allNews = new List<NewsItem>();
+            var allNews = new List<AbstractContent>();
             HtmlDocument root;
             try
             {
@@ -74,26 +50,24 @@ namespace Echo.News
                 TimeSpan newsTime;
                 if (!TimeSpan.TryParse(timeNode.InnerText, out newsTime))
                     continue;
-                allNews.Add(new NewsItem
+                allNews.Add(new NewsItem(Common.ContentType.News)
                 {
-                    NewsId = Guid.NewGuid(),
-                    NewsItemUrl = "http://echo.msk.ru" + urlNode.GetAttributeValue("href", string.Empty),
-                    NewsDateTime = ContentDate.Date.Add(newsTime),
-                    NewsTitle = urlNode.InnerText
+                    ItemId = Guid.NewGuid(),
+                    ItemUrl = "http://echo.msk.ru" + urlNode.GetAttributeValue("href", string.Empty),
+                    ItemDate = ContentDate.Date.Add(newsTime),
+                    ItemTitle = urlNode.InnerText
                 });
             }
             //array of new unique news
-            var newContent = allNews.Where(news => News.All(n => n.NewsTitle != news.NewsTitle)).ToArray();
+            var newContent = allNews.Where(news => ContentList.All(n => n.ItemTitle != news.ItemTitle)).ToArray();
             NewItemsCount = newContent.Length;
             if (NewItemsCount == 0)
                 return;
-            var list = News;
+            var list = ContentList;
             list.AddRange(newContent);
             //assign News property to raise PropertyChanged
-            News = list.OrderByDescending(n => n.NewsDateTime).ToList();
+            ContentList = list.OrderByDescending(n => n.ItemDate).ToList();
+            _progressBar.Visibility = Android.Views.ViewStates.Gone;
         }
-
-        //indexer (read only) for accessing a news item
-        public NewsItem this[int i] => News.Count == 0 ? null : News[i];
     }
 }

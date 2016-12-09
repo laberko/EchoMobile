@@ -21,14 +21,14 @@ namespace Echo.Show
         public ShowViewHolder(View itemView, Action<string> onItemClick, Action<string> onDownloadClick, Action<string> onListenClick) : base(itemView)
         {
             //locate and cache view references
-            Date = itemView.FindViewById<TextView>(Resource.Id.showDate);
-            Title = itemView.FindViewById<TextView>(Resource.Id.showTitle);
-            Moderators = itemView.FindViewById<TextView>(Resource.Id.showModerators);
-            Guests = itemView.FindViewById<TextView>(Resource.Id.showGuests);
+            Date = ItemView.FindViewById<TextView>(Resource.Id.showDate);
+            Title = ItemView.FindViewById<TextView>(Resource.Id.showTitle);
+            Moderators = ItemView.FindViewById<TextView>(Resource.Id.showModerators);
+            Guests = ItemView.FindViewById<TextView>(Resource.Id.showGuests);
             DownloadButton = ItemView.FindViewById<ImageButton>(Resource.Id.showDownload);
             ListenButton = ItemView.FindViewById<ImageButton>(Resource.Id.showListen);
             ButtonsLayout = ItemView.FindViewById<LinearLayoutCompat>(Resource.Id.showButtons);
-
+            
             //detect user clicks and report which item was clicked to the listeners
             itemView.Click += (sender, e) =>
             {

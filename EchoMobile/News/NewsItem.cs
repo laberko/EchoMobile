@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -7,23 +6,22 @@ using System.Linq;
 namespace Echo.News
 {
     //single news item
-    public class NewsItem
+    public class NewsItem : AbstractContent
     {
-        public Guid NewsId;
-        public string NewsItemUrl;
-        public DateTime NewsDateTime;
-        public string NewsTitle;
-        private string _newsText;
+        public NewsItem(Common.ContentType itemType) : base(itemType)
+        {
+            
+        }
 
         //download and parse news text
-        public async Task<string> GetNewsText()
+        public override async Task<string> GetHtml()
         {
-            if (!string.IsNullOrEmpty(_newsText))
-                return _newsText;
+            if (!string.IsNullOrEmpty(ItemText))
+                return ItemText;
             HtmlDocument newsRoot;
             try
             {
-                newsRoot = await Common.GetHtml(NewsItemUrl);
+                newsRoot = await Common.GetHtml(ItemUrl);
             }
             catch
             {
@@ -39,11 +37,11 @@ namespace Echo.News
             if (typicalDiv != null)
             {
                 newsStringBuilder.AppendLine(typicalDiv.InnerHtml);
-                newsStringBuilder.AppendLine(@"<p><a href=""" + NewsItemUrl + @"""><span>Источник - сайт Эхо Москвы</span></a></p>");
+                newsStringBuilder.AppendLine(@"<p><a href=""" + ItemUrl + @"""><span>Источник - сайт Эхо Москвы</span></a></p>");
             }
             newsStringBuilder.AppendLine(@"</body>");
-            _newsText = newsStringBuilder.ToString().Replace(@"""/", @"""http://echo.msk.ru/");
-            return _newsText;
+            ItemText = newsStringBuilder.ToString().Replace(@"""/", @"""http://echo.msk.ru/");
+            return ItemText;
         }
     }
 }

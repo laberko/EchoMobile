@@ -1,37 +1,27 @@
-using System;
 using System.Text;
 using System.Threading.Tasks;
-using Android.Graphics;
-using Echo.Person;
 using HtmlAgilityPack;
 using System.Linq;
 
 namespace Echo.Blog
 {
     //single blog item
-    public class BlogItem
+    public class BlogItem : AbstractContent
     {
-        public Guid BlogId;
-        public string BlogItemUrl;
-        public string BlogImageUrl;
-        public DateTime BlogDate;
-        public string BlogTitle;
-        public PersonItem BlogAuthor;
-        public string BlogAuthorName;
-        public string BlogAuthorUrl;
-        private string _blogText;
-        public Bitmap BlogImage;
-
-        //download and parse blog text
-        public async Task<string> GetBlogHtml()
+        public BlogItem(Common.ContentType itemType) : base(itemType)
         {
-            if (!string.IsNullOrEmpty(_blogText))
-                return _blogText;
+            
+        }
+        //download and parse blog text
+        public override async Task<string> GetHtml()
+        {
+            if (!string.IsNullOrEmpty(ItemText))
+                return ItemText;
             HtmlDocument blogRoot;
             var mediaHtml = string.Empty;
             try
             {
-                blogRoot = await Common.GetHtml(BlogItemUrl);
+                blogRoot = await Common.GetHtml(ItemUrl);
             }
             catch
             {
@@ -59,10 +49,10 @@ namespace Echo.Blog
             if (!string.IsNullOrEmpty(mediaHtml))
                 blogStringBuilder.AppendLine(mediaHtml);
             blogStringBuilder.AppendLine(textDiv.InnerHtml);
-            blogStringBuilder.AppendLine(@"<p><a href=""" + BlogItemUrl + @"""><span>Источник - сайт Эхо Москвы</span></a></p>");
+            blogStringBuilder.AppendLine(@"<p><a href=""" + ItemUrl + @"""><span>Источник - сайт Эхо Москвы</span></a></p>");
             blogStringBuilder.AppendLine(@"</body>");
-            _blogText = blogStringBuilder.ToString().Replace(@"""/", @"""http://echo.msk.ru/");
-            return _blogText;
+            ItemText = blogStringBuilder.ToString().Replace(@"""/", @"""http://echo.msk.ru/");
+            return ItemText;
         }
     }
 }

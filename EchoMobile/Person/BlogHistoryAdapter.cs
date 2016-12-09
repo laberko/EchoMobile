@@ -1,46 +1,47 @@
 using System;
+using System.Collections.Generic;
 using Android.Graphics;
 using Android.Support.V7.Widget;
 using Android.Views;
 
-namespace Echo.News
+namespace Echo.Person
 {
-    //RecyclerView adapter to connect the data set (news) to the RecyclerView
-    public class NewsAdapter : RecyclerView.Adapter
+    //RecyclerView adapter to connect the data set (blog) to the RecyclerView
+    public class BlogHistoryAdapter : RecyclerView.Adapter
     {
         public event EventHandler<string> ItemClick;
-        public NewsContent Content;
+        public List<AbstractContent> Content;
 
-        // create a new news CardView inside the RecyclerView
+        // create a new blog CardView inside the RecyclerView
         public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
         {
             // inflate the CardView
-            var itemView = LayoutInflater.From(parent.Context).Inflate(Resource.Layout.NewsCardView, parent, false);
-            var viewHolder = new NewsViewHolder(itemView, OnClick);
+            var itemView = LayoutInflater.From(parent.Context).Inflate(Resource.Layout.BlogHistoryCardView, parent, false);
+            var viewHolder = new BlogHistoryViewHolder(itemView, OnClick);
             return viewHolder;
         }
 
-        // fill in the contents of the news card
+        // fill in the contents of the blog card
         public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
         {
-            var viewHolder = holder as NewsViewHolder;
-            if ((viewHolder == null) || (Content.ContentList.Count == 0))
+            var viewHolder = holder as BlogHistoryViewHolder;
+            if ((viewHolder == null) || (Content.Count == 0))
                 return;
-            var news = Content[position];
-            if (news == null)
+            var blog = Content[position];
+            if (blog == null)
                 return;
-            viewHolder.Date.Text = news.ItemDate.ToString("t");
-            viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[0]));
+            viewHolder.Date.Text = blog.ItemDate.ToString("d MMMM yyyy");
+            viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[1]));
             viewHolder.Date.SetBackgroundColor(Color.Transparent);
             viewHolder.Date.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Title.Text = news.ItemTitle;
+            viewHolder.Title.Text = blog.ItemTitle;
             viewHolder.Title.SetBackgroundColor(Color.Transparent);
             viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Id = news.ItemId.ToString();
+            viewHolder.Id = blog.ItemId.ToString();
         }
 
-        // return the number of news available
-        public override int ItemCount => Content?.ContentList.Count ?? 0;
+        //return the number of blogs available
+        public override int ItemCount => Content?.Count ?? 0;
 
         //get stable id based on the item guid
         public override long GetItemId(int position)

@@ -11,30 +11,24 @@
         app:cardUseCompatPadding="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <GridLayout
+        <android.support.v7.widget.LinearLayoutCompat
+            android:id="@+id/historyCardLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:columnCount="2"
-            android:alignmentMode="alignBounds"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:clipToPadding="true"
-            android:fitsSystemWindows="true">
+            android:layout_marginRight="8dp">
             <TextView
                 android:textStyle="bold"
-                android:text=""
-                android:id="@+id/newsDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|fill" />
+                android:id="@+id/contentDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <TextView
                 android:textColor="#333333"
-                android:text=""
-                android:id="@+id/newsTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|fill"
-                android:layout_marginLeft="8dp" />
-        </GridLayout>
+                android:id="@+id/contentTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </android.support.v7.widget.LinearLayoutCompat>
     </android.support.v7.widget.CardView>
 </FrameLayout>

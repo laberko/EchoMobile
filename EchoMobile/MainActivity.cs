@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Timers;
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Views;
@@ -50,12 +51,22 @@ namespace Echo
             if (!IsTaskRoot)
             {
                 Common.ServiceBinder?.GetMediaPlayerService().Stop();
+                try
+                {
+                    StopService(new Intent(ApplicationContext, typeof (EchoPlayerService)));
+                }
+                catch
+                {
+                    // ignored
+                }
+                Common.EchoPlayer = null;
+                Common.ServiceBinder = null;
                 var thisIntent = PackageManager.GetLaunchIntentForPackage(PackageName);
                 var newIntent = IntentCompat.MakeRestartActivityTask(thisIntent.Component);
                 StartActivity(newIntent);
                 FinishAffinity();
             }
-            
+
             //get screen width
             Common.DisplayWidth = Math.Min(Resources.DisplayMetrics.WidthPixels, Resources.DisplayMetrics.HeightPixels);
 
@@ -76,11 +87,11 @@ namespace Echo
                 Common.PersonList = new List<PersonItem>();
             //collections of daily content
             if (Common.BlogContentList == null)
-                Common.BlogContentList = new List<BlogContent>();
+                Common.BlogContentList = new List<AbstractContentFactory>();
             if (Common.NewsContentList == null)
-                Common.NewsContentList = new List<NewsContent>();
+                Common.NewsContentList = new List<AbstractContentFactory>();
             if (Common.ShowContentList == null)
-                Common.ShowContentList = new List<ShowContent>();
+                Common.ShowContentList = new List<AbstractContentFactory>();
             //mediaplayer
             if (Common.EchoPlayer == null)
                 Common.EchoPlayer = new EchoMediaPlayer();
@@ -174,6 +185,7 @@ namespace Echo
             _news?.UpdateContent();
             _blogs?.UpdateContent();
             _shows?.UpdateContent();
+            Common.PlayList = _shows?.PlayList;
         }
 
         protected override void OnStop()
@@ -251,6 +263,22 @@ namespace Echo
                 case Resource.Id.top_menu_show:
                     _pager.SetCurrentItem(2, true);
                     break;
+                case Resource.Id.top_menu_settings:
+                    StartActivity(new Intent(this, typeof (SettingsActivity)));
+                    break;
+                case Resource.Id.top_menu_about:
+                    var openMarket = new Intent(Intent.ActionView, Android.Net.Uri.Parse("market://details?id=" + PackageName));
+                    openMarket.AddFlags(ActivityFlags.NoHistory | ActivityFlags.NewDocument | ActivityFlags.MultipleTask);
+                    try
+                    {
+                        StartActivity(openMarket);
+                    }
+                    catch (ActivityNotFoundException)
+                    {
+                        StartActivity(new Intent(Intent.ActionView, 
+                            Android.Net.Uri.Parse("http://play.google.com/store/apps/details?id=" + PackageName)));
+                    }
+                    break;
                 default:
                     break;
             }
@@ -285,9 +313,12 @@ namespace Echo
         {
             RunOnUiThread(() =>
             {
-                _news?.UpdateContent();
-                _blogs?.UpdateContent();
-                _shows?.UpdateContent();
+                _news.UpdateContent();
+                _news.HideBar();
+                _blogs.UpdateContent();
+                _blogs.HideBar();
+                _shows.UpdateContent();
+                _shows.HideBar();
             });
         }
 
@@ -298,13 +329,13 @@ namespace Echo
             {
                 switch (e.PropertyName)
                 {
-                    case "News":
+                    case "NewsContent":
                         _news.UpdateView();
                         break;
-                    case "Blogs":
+                    case "BlogContent":
                         _blogs.UpdateView();
                         break;
-                    case "Shows":
+                    case "ShowContent":
                         _shows.UpdateView();
                         break;
                     default:

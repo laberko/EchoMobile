@@ -11,28 +11,28 @@ namespace Echo.Player
         }
         public override void OnPause()
         {
-            _service.Pause();
             base.OnPause();
+            _service.Pause();
         }
         public override void OnPlay()
         {
-            _service.Play();
             base.OnPlay();
+            _service.Play();
         }
         public override void OnSkipToNext()
         {
-            _service.PlayNext();
             base.OnSkipToNext();
+            _service.PlayNext();
         }
         public override void OnSkipToPrevious()
         {
-            _service.PlayPrevious();
             base.OnSkipToPrevious();
+            _service.PlayPrevious();
         }
         public override void OnStop()
         {
-            _service.Stop();
             base.OnStop();
+            _service.Stop();
         }
     }
 }

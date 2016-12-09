@@ -12,4 +12,18 @@
   <string name="today">Сегодня</string>
   <string name="moderators">Ведущие</string>
   <string name="guests">Гости</string>
+  <string name="settings">Настройки</string>
+  <string name="music"> Музыка</string>
+  <string name="downloads">Загрузки</string>
+  <string name="documents">Документы</string>
+  <string name="podcasts">Подкасты</string>
+  <string name="setfont">Использовать крупный шрифт</string>
+  <string name="setfolder">Папка для загрузки:</string>
+  <string name="yes">Да</string>
+  <string name="no">Нет</string>
+  <string name="allshows">Все передачи</string>
+  <string name="playback_error">Ошибка при воспроизведении аудиофайла!</string>
+  <string name="show_history_count">Количество передач в результатах поиска:</string>
+  <string name="blog_history_count">Количество блогов в результатах поиска:</string>
+  <string name="about">О программе</string>
 </resources>

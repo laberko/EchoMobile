@@ -20,54 +20,25 @@
     </android.support.design.widget.AppBarLayout>
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:id="@+id/scroll"
         android:scrollbars="vertical"
         android:background="@android:color/transparent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:visibility="visible">
-        <android.support.v7.widget.GridLayout
-            android:id="@+id/blogGrid"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/historyRecyclerView"
+            android:scrollbars="vertical"
             android:background="@android:color/transparent"
-            app:rowCount="2"
-            app:columnCount="2"
-            android:layout_marginTop="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp">
-          <ImageButton
-    android:id="@+id/blogPic"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="@android:color/transparent" />
-          <TextView
-                app:layout_column="1"
-                android:layout_width="0dip"
-                android:background="@android:color/transparent"
-                android:textStyle="bold"
-                android:text=""
-                android:id="@+id/blogTitle"
-                android:layout_marginLeft="8dp"
-                app:layout_gravity="fill" />
-            <WebView
-                app:layout_row="1"
-                app:layout_columnSpan="2"
-                android:text=""
-                android:textColor="#333333"
-                android:background="@android:color/transparent"
-                android:typeface="serif"
-                android:id="@+id/blogText"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                app:layout_gravity="fill_horizontal" />
-        </android.support.v7.widget.GridLayout>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </android.support.v4.widget.NestedScrollView>
     <me.zhanghai.android.materialprogressbar.MaterialProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:id="@+id/blogsProgress"
+        android:id="@+id/historyProgress"
+        android:background="@android:color/transparent"
         android:indeterminate="true"
         android:visibility="gone"
         style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />

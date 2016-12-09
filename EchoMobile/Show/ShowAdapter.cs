@@ -32,20 +32,23 @@ namespace Echo.Show
             var viewHolder = holder as ShowViewHolder;
             if ((viewHolder == null) || (ItemCount == 0))
                 return;
-            var show = Content[position];
+            var show = Content[position] as ShowItem;
             if (show == null)
                 return;
-            viewHolder.Id = show.ShowId.ToString();
-            viewHolder.Date.Text = show.ShowDateTime.ToString("t");
+            viewHolder.Id = show.ItemId.ToString();
+            viewHolder.Date.Text = show.ItemDate.ToString("t");
             viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[2]));
             viewHolder.Date.SetBackgroundColor(Color.Transparent);
-            viewHolder.Title.Text = show.ShowTitle;
+            viewHolder.Date.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+            viewHolder.Title.Text = show.ItemTitle;
             viewHolder.Title.SetBackgroundColor(Color.Transparent);
+            viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
             if (!string.IsNullOrEmpty(show.ShowModeratorNames))
             {
                 viewHolder.Moderators.Visibility = ViewStates.Visible;
                 viewHolder.Moderators.SetBackgroundColor(Color.Transparent);
                 viewHolder.Moderators.Text = show.ShowModeratorNames;
+                viewHolder.Moderators.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize - 4);
             }
             else
                 viewHolder.Moderators.Visibility = ViewStates.Gone;
@@ -54,22 +57,21 @@ namespace Echo.Show
                 viewHolder.Guests.Visibility = ViewStates.Visible;
                 viewHolder.Guests.SetBackgroundColor(Color.Transparent);
                 viewHolder.Guests.Text = show.ShowGuestNames;
+                viewHolder.Guests.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize - 4);
             }
             else
                 viewHolder.Guests.Visibility = ViewStates.Gone;
-            var soundUrl = show.ShowSoundUrl;
+
+            var soundUrl = show.ItemSoundUrl;
             if (!string.IsNullOrEmpty(soundUrl))
             {
                 try
                 {
                     //the show has audio
-                    if (Common.EchoPlayer != null && Common.EchoPlayer.GetDataSource() == show.ShowSoundUrl &&
-                        Common.EchoPlayer.IsPlaying)
-                        viewHolder.ListenButton.SetImageDrawable(ContextCompat.GetDrawable(_context,
-                            Resource.Drawable.pause_black));
+                    if (Common.EchoPlayer != null && Common.EchoPlayer.DataSource == show.ItemSoundUrl && Common.EchoPlayer.IsPlaying)
+                        viewHolder.ListenButton.SetImageDrawable(ContextCompat.GetDrawable(_context, Resource.Drawable.pause_black));
                     else
-                        viewHolder.ListenButton.SetImageDrawable(ContextCompat.GetDrawable(_context,
-                            Resource.Drawable.play_black));
+                        viewHolder.ListenButton.SetImageDrawable(ContextCompat.GetDrawable(_context, Resource.Drawable.play_black));
                     viewHolder.ButtonsLayout.Visibility = ViewStates.Visible;
                     viewHolder.ButtonsLayout.SetBackgroundColor(Color.Transparent);
                 }
@@ -83,12 +85,12 @@ namespace Echo.Show
         }
 
         //return the number of shows available
-        public override int ItemCount => Content?.Shows.Count ?? 0;
+        public override int ItemCount => Content?.ContentList.Count ?? 0;
 
         //get stable id based on the item guid
         public override long GetItemId(int position)
         {
-            return BitConverter.ToInt64(Content[position].ShowId.ToByteArray(), 8);
+            return BitConverter.ToInt64(Content[position].ItemId.ToByteArray(), 8);
         }
 
         //click event handlers

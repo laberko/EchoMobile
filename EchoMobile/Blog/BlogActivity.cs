@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
@@ -8,6 +9,7 @@ using Android.Support.V7.App;
 using Android.Views;
 using Android.Webkit;
 using Android.Widget;
+using Echo.Person;
 using XamarinBindings.MaterialProgressBar;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
@@ -16,10 +18,12 @@ namespace Echo.Blog
     //activity to open a full blog item
     [Activity (Label = "",
         Icon = "@drawable/icon",
+        LaunchMode = LaunchMode.SingleTop,
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-	public class BlogActivity : AppCompatActivity
+	public class BlogActivity : AppCompatActivity, View.IOnClickListener
     {
         private WebView _textWebView;
+        private AbstractContent _blog;
 
         protected override async void OnCreate (Bundle bundle)
         {
@@ -47,20 +51,33 @@ namespace Echo.Blog
             progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
 
             //find blog with id passed to intent
-            var content = Common.BlogContentList.FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[1].Date)?.Blogs;
-            var blog = content?.FirstOrDefault(b => b.BlogId == Guid.Parse(Intent.GetStringExtra("ID")));
-            if (blog == null)
+            var content = Common.BlogContentList.FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[1].Date)?.ContentList;
+            var blogId = Guid.Parse(Intent.GetStringExtra("ID"));
+            //activity was called from content list?
+            _blog = content?.FirstOrDefault(b => b.ItemId == blogId);
+            if (_blog == null)
             {
-                progressBar.Visibility = ViewStates.Gone;
-                Finish();
-                return;
+                //activity was called from person history list?
+                var person = Common.PersonList.FirstOrDefault(p =>
+                            (p.PersonName == Intent.GetStringExtra("AuthorName") &&
+                             p.PersonType == Common.PersonType.Blog));
+                if (person != null)
+                    _blog = person.PersonContent.FirstOrDefault(b => b.ItemId == blogId);
+                if (_blog == null)
+                {
+                    //blog was not found anywhere
+                    progressBar.Visibility = ViewStates.Gone;
+                    Finish();
+                    return;
+                }
             }
             //get blog author
-            if (blog.BlogAuthor == null && !string.IsNullOrEmpty(blog.BlogAuthorUrl))
+            if (!string.IsNullOrEmpty(_blog.ItemAuthorUrl))
             {
                 try
                 {
-                    blog.BlogAuthor = await Common.GetPerson(blog.BlogAuthorUrl);
+                    _blog.ItemAuthor = await Common.GetPerson(_blog.ItemAuthorUrl, Common.PersonType.Blog);
+                    SupportActionBar.Title = _blog.ItemAuthorName;
                 }
                 catch
                 {
@@ -69,35 +86,36 @@ namespace Echo.Blog
                     Finish();
                     return;
                 }
-                SupportActionBar.Title = blog.BlogAuthor?.PersonName;
+                SupportActionBar.Title = _blog.ItemAuthor?.PersonName;
             }
-            else
-                SupportActionBar.Title = blog.BlogAuthorName;
             
-            if (blog.BlogDate.Date != DateTime.Now.Date)
-                SupportActionBar.Subtitle = blog.BlogDate.ToString("d MMMM");
+            if (_blog.ItemDate.Date != DateTime.Now.Date)
+                SupportActionBar.Subtitle = _blog.ItemDate.ToString("dddd d MMMM yyyy");
 
             //get author's picture for the blog
-            var pictureView = FindViewById<ImageView>(Resource.Id.blogPic);
+            var pictureView = FindViewById<ImageButton>(Resource.Id.blogPic);
             try
             {
-                if (!string.IsNullOrEmpty(blog.BlogAuthor?.PersonPhotoUrl))
-                    pictureView.SetImageBitmap(await blog.BlogAuthor.GetPersonPhoto(Common.DisplayWidth/3));
-                else if (!string.IsNullOrEmpty(blog.BlogImageUrl))
-                    pictureView.SetImageBitmap(await Common.GetImage(blog.BlogImageUrl, Common.DisplayWidth / 3));
+                if (!string.IsNullOrEmpty(_blog.ItemAuthor?.PersonPhotoUrl))
+                    pictureView.SetImageBitmap(await _blog.ItemAuthor.GetPersonPhoto(Common.DisplayWidth / 3));
+                else if (!string.IsNullOrEmpty(_blog.ItemPictureUrl))
+                    pictureView.SetImageBitmap(await Common.GetImage(_blog.ItemPictureUrl, Common.DisplayWidth / 3));
+                pictureView.SetOnClickListener(this);
             }
             catch
             {
                 pictureView.Visibility = ViewStates.Gone;
             }
-
+            
             //get blog's text (html)
             var titleTextView = FindViewById<TextView>(Resource.Id.blogTitle);
-            titleTextView.Text = blog.BlogTitle;
+            titleTextView.Text = _blog.ItemTitle;
+            titleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
+            titleTextView.SetTextColor(Color.Black);
             var html = string.Empty;
             try
             {
-                html = await blog.GetBlogHtml();
+                html = await _blog.GetHtml();
             }
             catch
             {
@@ -114,6 +132,7 @@ namespace Echo.Blog
             _textWebView.Settings.JavaScriptEnabled = true;
             _textWebView.Settings.StandardFontFamily = "serif";
             _textWebView.LoadDataWithBaseURL("", html, "text/html", "UTF-8", "");
+            _textWebView.Settings.DefaultFontSize = Common.FontSize;
             progressBar.Visibility = ViewStates.Gone;
         }
 
@@ -155,6 +174,15 @@ namespace Echo.Blog
         {
             _textWebView?.OnPause();
             base.OnStop();
+        }
+
+        //on author avatar click
+        public void OnClick(View v)
+        {
+            var intent = new Intent(this, typeof(BlogHistoryActivity));
+            intent.PutExtra("PersonUrl", _blog.ItemAuthorUrl);
+            StartActivity(intent);
+            Finish();
         }
     }
 }

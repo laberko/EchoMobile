@@ -47,26 +47,28 @@ namespace Echo.News
             progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[0]), PorterDuff.Mode.SrcIn);
 
             //find news with id passed to intent
-            var content = Common.NewsContentList.FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[0].Date)?.News;
-            var news = content?.FirstOrDefault(n => n.NewsId == Guid.Parse(Intent.GetStringExtra("ID")));
+            var content = Common.NewsContentList.FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[0].Date)?.ContentList;
+            var news = content?.FirstOrDefault(n => n.ItemId == Guid.Parse(Intent.GetStringExtra("ID")));
             if (news == null)
             {
                 progressBar.Visibility = ViewStates.Gone;
                 Finish();
                 return;
             }
-            SupportActionBar.Title = news.NewsDateTime.ToString("HH:mm");
-            SupportActionBar.Subtitle = news.NewsDateTime.Date == DateTime.Now.Date
+            SupportActionBar.Title = news.ItemDate.ToString("HH:mm");
+            SupportActionBar.Subtitle = news.ItemDate.Date == DateTime.Now.Date
                 ? Resources.GetString(Resource.String.today)
-                : news.NewsDateTime.ToString("d MMMM");
+                : news.ItemDate.ToString("dddd d MMMM yyyy");
             var titleTextView = FindViewById<TextView>(Resource.Id.newsTitle);
-            titleTextView.Text = news.NewsTitle;
+            titleTextView.Text = news.ItemTitle;
+            titleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
+            titleTextView.SetTextColor(Color.Black);
 
             //download html for webview
             string html;
             try
             {
-                html = await news.GetNewsText();
+                html = await news.GetHtml();
             }
             catch
             {
@@ -84,6 +86,8 @@ namespace Echo.News
             textWebView.SetBackgroundColor(Color.Transparent);
             textWebView.Settings.StandardFontFamily = "serif";
             textWebView.LoadDataWithBaseURL("", html, "text/html", "UTF-8", "");
+            textWebView.Settings.DefaultFontSize = Common.FontSize;
+
             progressBar.Visibility = ViewStates.Gone;
         }
 

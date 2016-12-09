@@ -5,6 +5,7 @@ using Android.Graphics;
 using Android.Support.V4.Widget;
 using Android.Support.V7.Widget;
 using Android.Views;
+using Echo.Person;
 using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.Blog
@@ -30,11 +31,11 @@ namespace Echo.Blog
             _progressBar.Visibility = ViewStates.Visible;
 
             //get existing blogs from collection: find blogContent for selected date
-            _content = Common.BlogContentList.FirstOrDefault(b => b.ContentDate.Date == _contentDay.Date);
+            _content = Common.BlogContentList.FirstOrDefault(b => b.ContentDate.Date == _contentDay.Date) as BlogContent;
             if (_content == null)
             {
                 //if not found - create new
-                _content = new BlogContent(_contentDay);
+                _content = new BlogContent(_contentDay, _progressBar);
                 Common.BlogContentList.Add(_content);
             }
 
@@ -45,6 +46,7 @@ namespace Echo.Blog
                 HasStableIds = true
             };
             _adapter.ItemClick += OnItemClick;
+            _adapter.PictureClick += OnPictureClick;
             _layoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.Vertical);
             _rView = view.FindViewById<RecyclerView>(Resource.Id.recycler_view);
             _rView.SetLayoutManager(_layoutManager);
@@ -61,11 +63,19 @@ namespace Echo.Blog
             };
         }
 
+
+        private void OnPictureClick(object sender, string personUrl)
+        {
+            var intent = new Intent(_context, typeof(BlogHistoryActivity));
+            intent.PutExtra("PersonUrl", personUrl);
+            _context.StartActivity(intent);
+        }
+
         //open full blog on blog card click
         private void OnItemClick(object sender, string id)
         {
             Guid itemId;
-            if (!Guid.TryParse(id, out itemId) || _content.Blogs.FirstOrDefault(n => n.BlogId == itemId) == null)
+            if (!Guid.TryParse(id, out itemId) || _content.ContentList.FirstOrDefault(n => n.ItemId == itemId) == null)
                 return;
             var intent = new Intent(_context, typeof (BlogActivity));
             intent.PutExtra("ID", id);
@@ -77,15 +87,14 @@ namespace Echo.Blog
         {
             if (_contentDay.Date == DateTime.Now.Date)
                 _content.GetContent();
-            _progressBar.Visibility = ViewStates.Invisible;
         }
 
         //update recyclerview (invoked on property changed in BlogContent by MainActivity)
         public void UpdateView()
         {
+            _progressBar.Visibility = ViewStates.Gone;
             if (_content == null || _layoutManager == null || _adapter == null || _rView == null)
                 return;
-            _progressBar.Visibility = ViewStates.Invisible;
             var hasOffScreenItems = false;
             for (var i = 0; i < _layoutManager.ItemCount; i++)
             {
@@ -111,6 +120,11 @@ namespace Echo.Blog
                     _adapter.NotifyDataSetChanged();
                 }
             }
+        }
+
+        public void HideBar()
+        {
+            _progressBar.Visibility = ViewStates.Gone;
         }
     }
 }
