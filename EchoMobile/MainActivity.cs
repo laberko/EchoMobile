@@ -18,6 +18,9 @@ using Echo.News;
 using Echo.Person;
 using Echo.Player;
 using Echo.Show;
+using Microsoft.Azure.Mobile;
+using Microsoft.Azure.Mobile.Analytics;
+using Microsoft.Azure.Mobile.Crashes;
 
 namespace Echo
 {
@@ -66,6 +69,8 @@ namespace Echo
                 StartActivity(newIntent);
                 FinishAffinity();
             }
+
+            MobileCenter.Start("5e142fe1-d7d1-4e79-96be-ccd83296239f", typeof(Analytics), typeof(Crashes));
 
             //get screen width
             Common.DisplayWidth = Math.Min(Resources.DisplayMetrics.WidthPixels, Resources.DisplayMetrics.HeightPixels);

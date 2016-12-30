@@ -130,7 +130,7 @@ namespace Echo.Show
             var subTitleTextView = FindViewById<TextView>(Resource.Id.showSubTitle);
             subTitleTextView.Text = string.IsNullOrEmpty(_show.ItemSubTitle) ? _show.ItemTitle : _show.ItemSubTitle;
             subTitleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
-            subTitleTextView.SetTextColor(Color.Black);
+            //subTitleTextView.SetTextColor(Color.Black);
 
             if (!string.IsNullOrEmpty(_show.ItemRootUrl))
             {
@@ -357,7 +357,7 @@ namespace Echo.Show
                 };
                 nameCell.SetWidth(0);
                 nameCell.SetBackgroundColor(Color.Transparent);
-                nameCell.SetTextColor(Color.Black);
+                //nameCell.SetTextColor(Color.Black);
                 if (!string.IsNullOrEmpty(person.PersonAbout))
                     nameCell.Text += (",\n" + person.PersonAbout);
                 nameCell.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);

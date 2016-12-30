@@ -48,7 +48,7 @@ namespace Echo
             var fontText = FindViewById<TextView>(Resource.Id.bigFontText);
             fontText.Text = Resources.GetString(Resource.String.setfont);
             fontText.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            fontText.SetTextColor(Color.Black);
+            //fontText.SetTextColor(Color.Black);
             var fontSwitch = FindViewById<Switch>(Resource.Id.bigFontSwitch);
             fontSwitch.TextOn = Resources.GetString(Resource.String.yes);
             fontSwitch.TextOff = Resources.GetString(Resource.String.no);
@@ -58,7 +58,7 @@ namespace Echo
             var folderText = FindViewById<TextView>(Resource.Id.downloadFolderText);
             folderText.Text = Resources.GetString(Resource.String.setfolder);
             folderText.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            folderText.SetTextColor(Color.Black);
+            //folderText.SetTextColor(Color.Black);
             _folderSpinner = FindViewById<Spinner>(Resource.Id.downloadFolderSpinner);
             _folderSpinner.ItemSelected += OnFolderSpinnerItemSelected;
             var folderSpinnerAdapter = new ArrayAdapter<string>(this, Resource.Layout.SpinnerItem, _folders);
@@ -70,7 +70,7 @@ namespace Echo
             var showHistoryText = FindViewById<TextView>(Resource.Id.showHistorySizeText);
             showHistoryText.Text = Resources.GetString(Resource.String.show_history_count);
             showHistoryText.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            showHistoryText.SetTextColor(Color.Black);
+            //showHistoryText.SetTextColor(Color.Black);
             _showSpinner = FindViewById<Spinner>(Resource.Id.showHistorySizeSpinner);
             _showSpinner.ItemSelected += OnShowSpinnerItemSelected;
             var showSpinnerAdapter = new ArrayAdapter<int>(this, Resource.Layout.SpinnerItem, _searchResults);
@@ -82,7 +82,7 @@ namespace Echo
             var blogHistoryText = FindViewById<TextView>(Resource.Id.blogHistorySizeText);
             blogHistoryText.Text = Resources.GetString(Resource.String.blog_history_count);
             blogHistoryText.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            blogHistoryText.SetTextColor(Color.Black);
+            //blogHistoryText.SetTextColor(Color.Black);
             _blogSpinner = FindViewById<Spinner>(Resource.Id.blogHistorySizeSpinner);
             _blogSpinner.ItemSelected += OnBlogSpinnerItemSelected;
             var blogSpinnerAdapter = new ArrayAdapter<int>(this, Resource.Layout.SpinnerItem, _searchResults);

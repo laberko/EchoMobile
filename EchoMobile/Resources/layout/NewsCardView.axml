@@ -28,7 +28,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left|fill" />
             <TextView
-                android:textColor="#333333"
                 android:text=""
                 android:id="@+id/newsTitle"
                 android:layout_width="0dp"

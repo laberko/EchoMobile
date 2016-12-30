@@ -62,7 +62,7 @@ namespace Echo.News
             var titleTextView = FindViewById<TextView>(Resource.Id.newsTitle);
             titleTextView.Text = news.ItemTitle;
             titleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
-            titleTextView.SetTextColor(Color.Black);
+            //titleTextView.SetTextColor(Color.Black);
 
             //download html for webview
             string html;

@@ -111,7 +111,7 @@ namespace Echo.Blog
             var titleTextView = FindViewById<TextView>(Resource.Id.blogTitle);
             titleTextView.Text = _blog.ItemTitle;
             titleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
-            titleTextView.SetTextColor(Color.Black);
+            //titleTextView.SetTextColor(Color.Black);
             var html = string.Empty;
             try
             {

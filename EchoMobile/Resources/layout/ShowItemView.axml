@@ -103,7 +103,6 @@
             <WebView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#333333"
                 android:background="@android:color/transparent"
                 android:typeface="serif"
                 android:id="@+id/showText" />

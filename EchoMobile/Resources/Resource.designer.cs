@@ -3738,11 +3738,11 @@ namespace Echo
 			// aapt resource value: 0x7f070173
 			public const int Divider = 2131165555;
 			
-			// aapt resource value: 0x7f070171
-			public const int MyTheme = 2131165553;
-			
 			// aapt resource value: 0x7f070172
-			public const int MyTheme_Base = 2131165554;
+			public const int MyTheme_Dark = 2131165554;
+			
+			// aapt resource value: 0x7f070171
+			public const int MyTheme_Light = 2131165553;
 			
 			// aapt resource value: 0x7f07001d
 			public const int Platform_AppCompat = 2131165213;

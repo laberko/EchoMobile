@@ -1,9 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <resources>
-  <style name="MyTheme" parent="MyTheme.Base">
-    <item name="android:windowNoTitle">true</item>
-    <item name="android:windowActionBar">false</item>
+
+  <style name="MyTheme.Light" parent="Theme.AppCompat.Light.DarkActionBar">
+    <item name="windowNoTitle">true</item>
+    <item name="windowActionBar">false</item>
+    <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    <item name="android:windowTranslucentStatus">false</item>    
+ </style>
+
+  <style name="MyTheme.Dark" parent="Theme.AppCompat">
+    <item name="windowNoTitle">true</item>
+    <item name="windowActionBar">false</item>
     <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     <item name="android:windowTranslucentStatus">false</item>    
   </style>
+
 </resources>
