@@ -1,14 +1,13 @@
 using Android.Content;
 using Android.OS;
-using Echo.Show;
 
 namespace Echo.Player
 {
     public class EchoPlayerServiceConnection : Java.Lang.Object, IServiceConnection
     {
-        private readonly ShowActivity _activity;
+        private readonly IPlayerInitiator _activity;
 
-        public EchoPlayerServiceConnection(ShowActivity acivity)
+        public EchoPlayerServiceConnection(IPlayerInitiator acivity)
         {
             _activity = acivity;
         }
@@ -21,7 +20,7 @@ namespace Echo.Player
             var binder = (EchoPlayerServiceBinder)service;
             var playerService = binder.GetMediaPlayerService();
             _activity.Binder = binder;
-            Common.ServiceBinder = binder;
+            MainActivity.ServiceBinder = binder;
             playerService.Playing += _activity.OnPlaying;
             playerService.Buffering += _activity.OnBuffering;
             _activity.ServiceConnected();

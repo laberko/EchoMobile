@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Android.Widget;
 using HtmlAgilityPack;
-using XamarinBindings.MaterialProgressBar;
+//using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.Blog
 {
     //blogs content for a specific day
     public class BlogContent : AbstractContentFactory, INotifyPropertyChanged
     {
-        private readonly MaterialProgressBar _progressBar;
+        private readonly ProgressBar _progressBar;
 
-        public BlogContent(DateTime day, MaterialProgressBar progressBar):base(day)
+        public BlogContent(DateTime day, ProgressBar progressBar):base(day)
         {
             _progressBar = progressBar;
             GetContent();
@@ -28,7 +29,7 @@ namespace Echo.Blog
             HtmlDocument root;
             try
             {
-                root = await Common.GetHtml(allBlogsUrl);
+                root = await MainActivity.GetHtml(allBlogsUrl);
             }
             catch
             {
@@ -63,7 +64,7 @@ namespace Echo.Blog
                 var metaDiv = contentDiv.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "meta");
                 var dateSpan = metaDiv?.Descendants("span").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "datetime");
                 var blogDateString = dateSpan?.GetAttributeValue("title", string.Empty);
-                var blog = new BlogItem(Common.ContentType.Blog)
+                var blog = new BlogItem(MainActivity.ContentType.Blog)
                 {
                     ItemId = Guid.NewGuid(),
                     ItemUrl = blogUrl,

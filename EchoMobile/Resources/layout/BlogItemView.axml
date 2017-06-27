@@ -3,19 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/main_content"
     android:fitsSystemWindows="true">
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar_top"
+        android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar">
+      <android.support.v7.widget.Toolbar
+          android:id="@+id/toolbar_top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="?attr/actionBarSize"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar"
+            app:popupTheme="@style/Popup"
             app:layout_scrollFlags="scroll|enterAlways" />
     </android.support.design.widget.AppBarLayout>
     <android.support.v4.widget.NestedScrollView
@@ -33,41 +34,41 @@
             android:background="@android:color/transparent"
             app:rowCount="2"
             app:columnCount="2"
-            android:layout_marginTop="8dp"
             android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
             android:layout_marginRight="8dp">
-          <ImageButton
-    android:id="@+id/blogPic"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="@android:color/transparent" />
-          <TextView
-                app:layout_column="1"
-                android:layout_width="0dip"
-                android:background="@android:color/transparent"
-                android:textStyle="bold"
-                android:text=""
+            <ImageButton
+                android:id="@+id/blogPic"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent" />
+            <net.laberko.EchoTextView
                 android:id="@+id/blogTitle"
                 android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="8dp"
+                app:layout_column="1"
+                android:layout_width="0dip"
                 app:layout_gravity="fill" />
-            <WebView
+            <net.laberko.EchoWebView
+                android:id="@+id/blogText"
                 app:layout_row="1"
                 app:layout_columnSpan="2"
-                android:text=""
-                android:background="@android:color/transparent"
-                android:typeface="serif"
-                android:id="@+id/blogText"
+                android:visibility="gone"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 app:layout_gravity="fill_horizontal" />
         </android.support.v7.widget.GridLayout>
     </android.support.v4.widget.NestedScrollView>
-    <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+    <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
+        android:layout_gravity="center"
+        android:layout_centerInParent="true"
         android:id="@+id/blogsProgress"
         android:indeterminate="true"
-        android:visibility="gone"
-        style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
+        android:visibility="gone"/>
 </android.support.design.widget.CoordinatorLayout>

@@ -29,13 +29,8 @@ namespace Echo.News
             var news = Content[position];
             if (news == null)
                 return;
-            viewHolder.Date.Text = news.ItemDate.ToString("t");
-            viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[0]));
-            viewHolder.Date.SetBackgroundColor(Color.Transparent);
-            viewHolder.Date.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Title.Text = news.ItemTitle;
-            viewHolder.Title.SetBackgroundColor(Color.Transparent);
-            viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+            viewHolder.Date.Setup(news.ItemDate.ToString("t"), Color.ParseColor(MainActivity.ColorAccent[0]), TypefaceStyle.Bold, MainActivity.FontSize);
+            viewHolder.Title.Setup(news.ItemTitle, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize);
             viewHolder.Id = news.ItemId.ToString();
         }
 

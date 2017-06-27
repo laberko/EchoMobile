@@ -21,11 +21,11 @@ namespace Echo
         // month is a value between 0 and 11, not 1 and 12!
         public override Dialog OnCreateDialog(Bundle savedInstanceState)
         {
-            //default date is today
-            var currently = DateTime.Now.ToUniversalTime();
+            //default date
+            var currently = MainActivity.SelectedDates[MainActivity.CurrentPosition];
             var dialog = new DatePickerDialog(Activity, this, currently.Year, currently.Month - 1, currently.Day);
             //maximum date is today
-            dialog.DatePicker.MaxDate = (long)(currently - DateTime.Parse("1/1/1970 0:0:0")).TotalMilliseconds;
+            dialog.DatePicker.MaxDate = (long)(DateTime.Now.ToUniversalTime() - DateTime.Parse("1/1/1970 0:0:0")).TotalMilliseconds;
             return dialog;
         }
 

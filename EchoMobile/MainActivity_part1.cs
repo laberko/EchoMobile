@@ -2,25 +2,33 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
+using Android;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
-using Android.Views;
-using Toolbar = Android.Support.V7.Widget.Toolbar;
 using Android.Support.Design.Widget;
+using Android.Support.V4.App;
+using Android.Views;
 using Android.Support.V4.Content;
 using Android.Support.V4.View;
 using Android.Support.V7.App;
 using Echo.Blog;
 using Echo.News;
+using Echo.Online;
 using Echo.Person;
 using Echo.Player;
 using Echo.Show;
 using Microsoft.Azure.Mobile;
 using Microsoft.Azure.Mobile.Analytics;
 using Microsoft.Azure.Mobile.Crashes;
+using Android.Runtime;
+using Android.Text;
+using Echo.Settings;
+using Plugin.Connectivity;
+using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 namespace Echo
 {
@@ -29,8 +37,9 @@ namespace Echo
         Icon = "@drawable/icon",
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
         LaunchMode = LaunchMode.SingleTop,
+        ResizeableActivity = true,
         AlwaysRetainTaskState = true)]
-    public class MainActivity : AppCompatActivity
+    public partial class MainActivity : AppCompatActivity
     {
         private ViewPager _pager;
         private FloatingActionButton _fab;
@@ -42,28 +51,28 @@ namespace Echo
         private NewsView _news;
         private BlogView _blogs;
         private ShowView _shows;
+        private OnlineView _online;
         private AppBarLayout _appBar;
         private Toolbar _toolBar;
         private DateTime _lastActive;
 
         protected override void OnCreate(Bundle bundle)
         {
+            SetTheme(Theme);
             base.OnCreate(bundle);
 
             //if activity is already living under the top (previously started with different intent) - restart it
             if (!IsTaskRoot)
             {
-                Common.ServiceBinder?.GetMediaPlayerService().Stop();
                 try
                 {
                     StopService(new Intent(ApplicationContext, typeof (EchoPlayerService)));
+                    Cleanup();
                 }
                 catch
                 {
                     // ignored
                 }
-                Common.EchoPlayer = null;
-                Common.ServiceBinder = null;
                 var thisIntent = PackageManager.GetLaunchIntentForPackage(PackageName);
                 var newIntent = IntentCompat.MakeRestartActivityTask(thisIntent.Component);
                 StartActivity(newIntent);
@@ -73,10 +82,10 @@ namespace Echo
             MobileCenter.Start("5e142fe1-d7d1-4e79-96be-ccd83296239f", typeof(Analytics), typeof(Crashes));
 
             //get screen width
-            Common.DisplayWidth = Math.Min(Resources.DisplayMetrics.WidthPixels, Resources.DisplayMetrics.HeightPixels);
+            DisplayWidth = Math.Min(Resources.DisplayMetrics.WidthPixels, Resources.DisplayMetrics.HeightPixels);
 
             //dates for the main fragments
-            Common.SelectedDates = new [] { DateTime.Now, DateTime.Now, DateTime.Now };
+            SelectedDates = new [] { DateTime.Now, DateTime.Now, DateTime.Now, DateTime.Now };
 
             //timer for content update
             _refreshTimer = new Timer
@@ -87,53 +96,54 @@ namespace Echo
 
             SetContentView(Resource.Layout.Main);
 
-            //collection of people
-            if (Common.PersonList == null)
-                Common.PersonList = new List<PersonItem>();
-            //collections of daily content
-            if (Common.BlogContentList == null)
-                Common.BlogContentList = new List<AbstractContentFactory>();
-            if (Common.NewsContentList == null)
-                Common.NewsContentList = new List<AbstractContentFactory>();
-            if (Common.ShowContentList == null)
-                Common.ShowContentList = new List<AbstractContentFactory>();
-            //mediaplayer
-            if (Common.EchoPlayer == null)
-                Common.EchoPlayer = new EchoMediaPlayer();
-            //viewpager adapter
-            if (_pagerAdapter == null)
-                _pagerAdapter = new EchoFragmentPagerAdapter(SupportFragmentManager);
-
             //toolbar
             _appBar = FindViewById<AppBarLayout>(Resource.Id.appbar);
             _toolBar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
             SetSupportActionBar(_toolBar);
+            //ActionBar.SetDisplayShowTitleEnabled(true);
+
+            //collection of people
+            if (PersonList == null)
+                PersonList = new List<PersonItem>();
+            //collections of daily content
+            if (BlogContentList == null)
+                BlogContentList = new List<AbstractContentFactory>();
+            if (NewsContentList == null)
+                NewsContentList = new List<AbstractContentFactory>();
+            if (ShowContentList == null)
+                ShowContentList = new List<AbstractContentFactory>();
+            //mediaplayer
+            if (EchoPlayer == null)
+                EchoPlayer = new EchoMediaPlayer();
+            //viewpager adapter
+            if (_pagerAdapter == null)
+                _pagerAdapter = new EchoFragmentPagerAdapter(SupportFragmentManager);
 
             //floating action button (calendar)
             _fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
-            _fabClickHandler = (sender, args) =>
+            _fabClickHandler = delegate
             {
-                var frag = EchoDatePicker.NewInstance(delegate (DateTime date)
+                var frag = EchoDatePicker.NewInstance(delegate(DateTime date)
                 {
-                    Common.SelectedDates[_viewPageListener.CurrentPosition] = date;
+                    SelectedDates[CurrentPosition] = date;
                     _toolBar.Subtitle = date.Date == DateTime.Now.Date
                         ? Resources.GetString(Resource.String.today)
                         : date.ToString("m");
                     _pagerAdapter.NotifyDataSetChanged();
+                    _appBar.SetExpanded(true);
                 });
                 frag.Show(FragmentManager, frag.Tag);
             };
             _fab.Click += _fabClickHandler;
-            Common.Fab = _fab;
 
             //collection of viewpager fragments
             //add news fragment to ViewPager adapter
             _pagerAdapter.AddFragmentView((i, v, b) =>
             {
                 var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                var selectedDate = Common.SelectedDates[0];
+                var selectedDate = SelectedDates[0];
                 _news = new NewsView(selectedDate, view, this);
-                var content = Common.NewsContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
+                var content = NewsContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
                 if (content != null)
                     content.PropertyChanged += OnContentChanged;
                 return view;
@@ -142,9 +152,9 @@ namespace Echo
             _pagerAdapter.AddFragmentView((i, v, b) =>
             {
                 var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                var selectedDate = Common.SelectedDates[1];
+                var selectedDate = SelectedDates[1];
                 _blogs = new BlogView(selectedDate, view, this);
-                var content = Common.BlogContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
+                var content = BlogContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
                 if (content != null)
                     content.PropertyChanged += OnContentChanged;
                 return view;
@@ -153,44 +163,97 @@ namespace Echo
             _pagerAdapter.AddFragmentView((i, v, b) =>
             {
                 var view = i.Inflate(Resource.Layout.PagerView, v, false);
-                var selectedDate = Common.SelectedDates[2];
+                var selectedDate = SelectedDates[2];
                 _shows = new ShowView(selectedDate, view, this);
-                var content = Common.ShowContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
+                var content = ShowContentList.FirstOrDefault(n => n.ContentDate.Date == selectedDate.Date);
                 if (content != null)
                     content.PropertyChanged += OnContentChanged;
                 return view;
             }, 2);
+            //add online fragment to ViewPager adapter
+            _pagerAdapter.AddFragmentView((i, v, b) =>
+            {
+                var view = i.Inflate(Resource.Layout.OnlineView, v, false);
+                view.SetFitsSystemWindows(false);
+                _online = new OnlineView(view, this);
+                return view;
+            }, 3);
 
             //viewpager
             _pager = FindViewById<ViewPager>(Resource.Id.pager);
-            _pager.OffscreenPageLimit = 2;
+            _pager.OffscreenPageLimit = 3;
             _pager.Adapter = _pagerAdapter;
+            _pager.SetPageTransformer(true, new EchoViewPageTransformer());
 
-            //refresh RecyclerView on Play/Pause
-            Common.EchoPlayer.PlaybackStarted += delegate
+            //refresh RecyclerView on Play/Pause (update buttons)
+            EchoPlayer.PlaybackStarted += delegate
             {
-                RunOnUiThread(() => _shows.UpdateViewOnPlay());
+                //RunOnUiThread(() => _shows.UpdateViewOnPlay());
+                _shows.UpdateViewOnPlay();
             };
-            Common.EchoPlayer.PlaybackPaused += delegate
+            EchoPlayer.PlaybackPaused += delegate
             {
-                RunOnUiThread(() => _shows.UpdateViewOnPlay());
+                //RunOnUiThread(() => _shows.UpdateViewOnPlay());
+                _shows.UpdateViewOnPlay();
             };
+
+            //request necessary permissions
+            var appPermissions = new[]
+            {
+                Manifest.Permission.Internet,
+                Manifest.Permission.ReadExternalStorage,
+                Manifest.Permission.WriteExternalStorage,
+                Manifest.Permission.MediaContentControl,
+                Manifest.Permission.WakeLock,
+                Manifest.Permission.SendSms,
+                Manifest.Permission.GetAccounts,
+                Manifest.Permission.CallPhone,
+                Manifest.Permission.ModifyAudioSettings
+            };
+            var requiredPermissions = appPermissions.Where(perm => ContextCompat.CheckSelfPermission(this, perm) != Permission.Granted).ToArray();
+            if (requiredPermissions.Length > 0)
+                ActivityCompat.RequestPermissions(this, requiredPermissions, 101);
+        }
+
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
+        {
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            _online?.OnlineEnable();
+        }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+            //if date has changed since activity was stopped
+            if (_lastActive.Date != DateTime.Now.Date)
+            {
+                SelectedDates = new[] { DateTime.Now, DateTime.Now, DateTime.Now, DateTime.Now };
+                _toolBar.Subtitle = Resources.GetString(Resource.String.today);
+                _lastActive = DateTime.Now;
+            }
+            _pagerAdapter.NotifyDataSetChanged();
+        }
+
+        protected override async void OnResume()
+        {
+            base.OnResume();
+            _refreshTimer?.Start();
+            if (await CheckConnectivity())
+                RunOnUiThread(() =>
+                {
+                    _news?.UpdateContent();
+                    _blogs?.UpdateContent();
+                    _shows?.UpdateContent();
+                    _online?.OnlineEnable();
+                });
+            PlayList = _shows?.PlayList;
         }
 
         protected override void OnPause()
         {
+            _online?.Dispose();
             base.OnPause();
             _refreshTimer?.Stop();
-        }
-
-        protected override void OnResume()
-        {
-            base.OnResume();
-            _refreshTimer?.Start();
-            _news?.UpdateContent();
-            _blogs?.UpdateContent();
-            _shows?.UpdateContent();
-            Common.PlayList = _shows?.PlayList;
         }
 
         protected override void OnStop()
@@ -200,40 +263,44 @@ namespace Echo
             _lastActive = DateTime.Now;
         }
 
-        protected override void OnStart()
+        public override void OnBackPressed()
         {
-            base.OnStart();
-            if (_lastActive.Date == DateTime.Now.Date)
-                return;
-            //if date has changed since activity was stopped
-            Common.SelectedDates = new[] { DateTime.Now, DateTime.Now, DateTime.Now };
-            _toolBar.Subtitle = Resources.GetString(Resource.String.today);
-            _pagerAdapter.NotifyDataSetChanged();
-            _lastActive = DateTime.Now;
+            base.OnBackPressed();
+            try
+            {
+                FinishAffinity();
+                System.Environment.Exit(0);
+            }
+            catch
+            {
+                // ignored
+            }
         }
 
-        protected override void OnRestart()
-        {
-            base.OnRestart();
-            _pagerAdapter.NotifyDataSetChanged();
-        }
 
         protected override void OnDestroy()
         {
+            _online?.Dispose();
             base.OnDestroy();
+            Cleanup();
+        }
+
+        private void Cleanup()
+        {
             try
             {
-                if (Common.ServiceBinder != null && Common.ServiceBinder.GetMediaPlayerService() != null)
+                _refreshTimer?.Stop();
+                if (ServiceBinder?.GetMediaPlayerService() != null)
                 {
-                    Common.ServiceBinder.GetMediaPlayerService().Stop();
-                    Common.ServiceBinder.GetMediaPlayerService().OnDestroy();
-                    Common.ServiceBinder = null;
+                    ServiceBinder.GetMediaPlayerService().Stop();
+                    ServiceBinder.GetMediaPlayerService().OnDestroy();
+                    ServiceBinder = null;
                 }
-                if (Common.EchoPlayer == null)
+                if (EchoPlayer == null)
                     return;
-                Common.EchoPlayer.Reset();
-                Common.EchoPlayer.Release();
-                Common.EchoPlayer = null;
+                EchoPlayer.Reset();
+                EchoPlayer.Release();
+                EchoPlayer = null;
             }
             catch
             {
@@ -245,7 +312,7 @@ namespace Echo
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.top_menu, menu);
-            _viewPageListener = new EchoViewPageListener(this, menu, Window, _appBar, _toolBar);
+            _viewPageListener = new EchoViewPageListener(this, menu, Window, _appBar, _toolBar, _fab);
             _pager.AddOnPageChangeListener(_viewPageListener);
             _viewPageListener.OnPageSelected(0);
             _pager.SetCurrentItem(0, true);
@@ -267,6 +334,9 @@ namespace Echo
                     break;
                 case Resource.Id.top_menu_show:
                     _pager.SetCurrentItem(2, true);
+                    break;
+                case Resource.Id.top_menu_online:
+                    _pager.SetCurrentItem(3, true);
                     break;
                 case Resource.Id.top_menu_settings:
                     StartActivity(new Intent(this, typeof (SettingsActivity)));
@@ -290,41 +360,20 @@ namespace Echo
             return base.OnOptionsItemSelected(item);
         }
 
-        public override void OnBackPressed()
-        {
-            base.OnBackPressed();
-            try
-            {
-                if (Common.ServiceBinder != null && Common.ServiceBinder.GetMediaPlayerService() != null)
-                {
-                    Common.ServiceBinder.GetMediaPlayerService().Stop();
-                    Common.ServiceBinder.GetMediaPlayerService().OnDestroy();
-                    Common.ServiceBinder = null;
-                }
-                if (Common.EchoPlayer == null)
-                    return;
-                Common.EchoPlayer.Reset();
-                Common.EchoPlayer.Release();
-                Common.EchoPlayer = null;
-            }
-            catch
-            {
-                // ignored
-            }
-        }
 
         //update content
-        private void OnTimer(object sender, ElapsedEventArgs e)
+        private async void OnTimer(object sender, ElapsedEventArgs e)
         {
-            RunOnUiThread(() =>
-            {
-                _news.UpdateContent();
-                _news.HideBar();
-                _blogs.UpdateContent();
-                _blogs.HideBar();
-                _shows.UpdateContent();
-                _shows.HideBar();
-            });
+            if (await CheckConnectivity())
+                RunOnUiThread(() =>
+                {
+                    _news.UpdateContent();
+                    _news.HideBar();
+                    _blogs.UpdateContent();
+                    _blogs.HideBar();
+                    _shows.UpdateContent();
+                    _shows.HideBar();
+                });
         }
 
         //update fragment view on content change (e has the property name)
@@ -347,6 +396,17 @@ namespace Echo
                         break;
                 }
             });
+        }
+
+        private async Task<bool> CheckConnectivity()
+        {
+            if (await CrossConnectivity.Current.IsRemoteReachable("echo.msk.ru"))
+                return true;
+            var message = "<font color=\"#ffffff\">" + Resources.GetText(Resource.String.network_error) + "</font>";
+            Snackbar.Make(_pager, Html.FromHtml(message, FromHtmlOptions.ModeLegacy), 10000)
+                .SetAction(Resources.GetText(Resource.String.exit), v => { OnBackPressed(); })
+                .Show();
+            return false;
         }
     }
 }

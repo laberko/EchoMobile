@@ -1,48 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:id="@+id/refresher"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:fitsSystemWindows="false"
     android:minWidth="25px"
     android:minHeight="25px">
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/topLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+        <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
+            android:layout_centerInParent="true"
             android:id="@+id/newsProgress"
             android:background="@android:color/transparent"
             android:indeterminate="true"
-            android:visibility="gone"
-            style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:visibility="gone"/>
+        <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
+            android:layout_centerInParent="true"
             android:id="@+id/blogsProgress"
             android:background="@android:color/transparent"
             android:indeterminate="true"
-            android:visibility="gone"
-            style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:visibility="gone"/>
+        <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
+            android:layout_centerInParent="true"
             android:id="@+id/showsProgress"
             android:background="@android:color/transparent"
             android:indeterminate="true"
-            android:visibility="gone"
-            style="@style/Widget.MaterialProgressBar.ProgressBar.Large" />
+            android:visibility="gone"/>
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:scrollbars="vertical"
             android:background="@android:color/transparent"
+            android:clipToPadding="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </android.support.design.widget.CoordinatorLayout>

@@ -8,7 +8,7 @@ namespace Echo.Blog
     //single blog item
     public class BlogItem : AbstractContent
     {
-        public BlogItem(Common.ContentType itemType) : base(itemType)
+        public BlogItem(MainActivity.ContentType itemType) : base(itemType)
         {
             
         }
@@ -21,7 +21,7 @@ namespace Echo.Blog
             var mediaHtml = string.Empty;
             try
             {
-                blogRoot = await Common.GetHtml(ItemUrl);
+                blogRoot = await MainActivity.GetHtml(ItemUrl);
             }
             catch
             {
@@ -40,12 +40,15 @@ namespace Echo.Blog
             if (textDiv == null)
                 return null;
             var blogStringBuilder = new StringBuilder();
-            //style html and append downloaded divs
-            blogStringBuilder.AppendLine(@"<style>img{display: inline; height: auto; max-width: 100%;}</style>");
-            blogStringBuilder.AppendLine(@"<style>div{height: auto; max-width: 100%;}</style>");
-            blogStringBuilder.AppendLine(@"<style>h1{font-family: sans-serif; font-weight: bold; text-align: center;}</style>");
-            blogStringBuilder.AppendLine(@"<style>iframe{height: auto; max-width: 100%;}</style>");
-            blogStringBuilder.AppendLine(@"<body>");
+            blogStringBuilder.AppendLine(@"<style>img{display: inline; height: auto; max-width: 100%;}");
+            blogStringBuilder.AppendLine(@"div{height: auto; max-width: 100%;}");
+            blogStringBuilder.AppendLine(@"h1{font-family: sans-serif; font-weight: bold; text-align: center;}");
+            blogStringBuilder.AppendLine(@"iframe{height: auto; max-width: 100%;}</style>");
+            blogStringBuilder.Append("<body text = ");
+            blogStringBuilder.Append(MainActivity.WebViewTextColor);
+            blogStringBuilder.Append(" link = ");
+            blogStringBuilder.Append(MainActivity.WebViewLinkColor);
+            blogStringBuilder.AppendLine(">");
             if (!string.IsNullOrEmpty(mediaHtml))
                 blogStringBuilder.AppendLine(mediaHtml);
             blogStringBuilder.AppendLine(textDiv.InnerHtml);

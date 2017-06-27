@@ -21,7 +21,7 @@ namespace Echo.Show
         public int ShowPlayerPosition;
         public int ShowDuration;
 
-        public ShowItem(Common.ContentType itemType) : base(itemType)
+        public ShowItem(MainActivity.ContentType itemType) : base(itemType)
         {
             ShowModerators = new List<PersonItem>();
             ShowModeratorUrls = new List<string>();
@@ -37,10 +37,10 @@ namespace Echo.Show
             Bitmap picture;
             foreach (var url in ShowGuestUrls.Union(ShowModeratorUrls))
             {
-                var person = await Common.GetPerson(url, Common.PersonType.Show);
+                var person = await MainActivity.GetPerson(url, MainActivity.PersonType.Show);
                 if (person == null)
                     continue;
-                picture = await Common.GetImage(person.PersonPhotoUrl, widthLimit);
+                picture = await MainActivity.GetImage(person.PersonPhotoUrl, widthLimit);
                 if (picture == null)
                     continue;
                 ItemPicture = picture;
@@ -48,7 +48,7 @@ namespace Echo.Show
             }
             if (string.IsNullOrEmpty(ItemPictureUrl))
                 return null;
-            picture = await Common.GetImage(ItemPictureUrl, widthLimit);
+            picture = await MainActivity.GetImage(ItemPictureUrl, widthLimit);
             if (picture == null)
                 return null;
             ItemPicture = picture;
@@ -81,7 +81,7 @@ namespace Echo.Show
             HtmlDocument showRoot;
             try
             {
-                showRoot = await Common.GetHtml(ItemUrl);
+                showRoot = await MainActivity.GetHtml(ItemUrl);
             }
             catch
             {
@@ -90,17 +90,22 @@ namespace Echo.Show
             //subtitle
             var showTitleDiv = showRoot?.DocumentNode.Descendants("div").FirstOrDefault(n => n.Attributes.Contains("class") && n.Attributes["class"].Value == "title");
             var showSubTitleNode = showTitleDiv?.Descendants("h1").FirstOrDefault();
-            ItemSubTitle = showSubTitleNode?.InnerText;
+            if (!string.IsNullOrEmpty(showSubTitleNode?.InnerText))
+                ItemSubTitle = showSubTitleNode.InnerText;
             //text
             var showTextDiv = showRoot?.DocumentNode.Descendants("div").FirstOrDefault(n => n.Attributes.Contains("class") && n.Attributes["class"].Value.Contains("typical"));
             if (showTextDiv != null)
             {
                 var showStringBuilder = new StringBuilder();
-                showStringBuilder.AppendLine(@"<style>img{display: inline; height: auto; max-width: 100%;}</style>");
-                showStringBuilder.AppendLine(@"<style>div{height: auto; max-width: 100%;}</style>");
-                showStringBuilder.AppendLine(@"<style>iframe{height: auto; max-width: 100%;}</style>");
-                showStringBuilder.AppendLine(@"<style>blockquote{font-weight: bold; font-style: italic; text-align: center; height: auto; max-width: 100%;}</style>");
-                showStringBuilder.AppendLine(@"<body>");
+                showStringBuilder.AppendLine(@"<style>img{display: inline; height: auto; max-width: 100%;}");
+                showStringBuilder.AppendLine(@"div{height: auto; max-width: 100%;}");
+                showStringBuilder.AppendLine(@"iframe{height: auto; max-width: 100%;}");
+                showStringBuilder.AppendLine(@"blockquote{font-weight: bold; font-style: italic; text-align: center; height: auto; max-width: 100%;}</style>");
+                showStringBuilder.Append("<body text = ");
+                showStringBuilder.Append(MainActivity.WebViewTextColor);
+                showStringBuilder.Append(" link = ");
+                showStringBuilder.Append(MainActivity.WebViewLinkColor);
+                showStringBuilder.AppendLine(">");
                 showStringBuilder.AppendLine(showTextDiv.InnerHtml);
                 showStringBuilder.AppendLine(@"<p><a href=""" + ItemUrl + @"""><span>Источник - сайт Эхо Москвы</span></a></p>");
                 showStringBuilder.AppendLine(@"</body>");
@@ -137,14 +142,14 @@ namespace Echo.Show
             {
                 foreach (var url in ShowGuestUrls.Where(url => (ShowGuests.All(p => p.PersonUrl != url) && ShowModerators.All(p => p.PersonUrl != url))))
                 {
-                    ShowGuests.Add(await Common.GetPerson(url, Common.PersonType.Show));
+                    ShowGuests.Add(await MainActivity.GetPerson(url, MainActivity.PersonType.Show));
                 }
             }
             if (ShowModeratorUrls.Count > 0 && ShowModerators.Count != ShowModeratorUrls.Count)
             {
                 foreach (var url in ShowModeratorUrls.Where(url => (ShowGuests.All(p => p.PersonUrl != url) && ShowModerators.All(p => p.PersonUrl != url))))
                 {
-                    ShowModerators.Add(await Common.GetPerson(url, Common.PersonType.Show));
+                    ShowModerators.Add(await MainActivity.GetPerson(url, MainActivity.PersonType.Show));
                 }
             }
             return ItemText;

@@ -1,8 +1,9 @@
+using Android.Media.Session;
 using Android.Support.V4.Media.Session;
 
 namespace Echo.Player
 {
-    public class EchoMediaSessionCallback : MediaSessionCompat.Callback
+    public class EchoMediaSessionCallback : MediaSession.Callback
     {
         private readonly EchoPlayerService _service;
         public EchoMediaSessionCallback(EchoPlayerServiceBinder binder)

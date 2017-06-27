@@ -5,8 +5,8 @@ using Android.Graphics;
 using Android.Support.V4.Widget;
 using Android.Support.V7.Widget;
 using Android.Views;
-using Echo.Person;
-using XamarinBindings.MaterialProgressBar;
+using Android.Widget;
+using Echo.BlogHistory;
 
 namespace Echo.Blog
 {
@@ -19,24 +19,25 @@ namespace Echo.Blog
         private readonly BlogContent _content;
         private readonly Context _context;
         private readonly StaggeredGridLayoutManager _layoutManager;
-        private readonly MaterialProgressBar _progressBar;
+        private readonly ProgressBar _progressBar;
 
         public BlogView(DateTime day, View view, Context context)
         {
             _context = context;
             _contentDay = day;
 
-            _progressBar = view.FindViewById<MaterialProgressBar>(Resource.Id.blogsProgress);
-            _progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
-            _progressBar.Visibility = ViewStates.Visible;
+            _progressBar = view.FindViewById<ProgressBar>(Resource.Id.blogsProgress);
+            _progressBar.ScaleX = 1.5f;
+            _progressBar.ScaleY = 1.5f;
+            _progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(MainActivity.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
 
             //get existing blogs from collection: find blogContent for selected date
-            _content = Common.BlogContentList.FirstOrDefault(b => b.ContentDate.Date == _contentDay.Date) as BlogContent;
+            _content = MainActivity.BlogContentList.FirstOrDefault(b => b.ContentDate.Date == _contentDay.Date) as BlogContent;
             if (_content == null)
             {
                 //if not found - create new
                 _content = new BlogContent(_contentDay, _progressBar);
-                Common.BlogContentList.Add(_content);
+                MainActivity.BlogContentList.Add(_content);
             }
 
             //RecyclerView
@@ -49,13 +50,16 @@ namespace Echo.Blog
             _adapter.PictureClick += OnPictureClick;
             _layoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.Vertical);
             _rView = view.FindViewById<RecyclerView>(Resource.Id.recycler_view);
+            _rView.SetPadding(0, 0, 0, MainActivity.DisplayWidth / 4);
             _rView.SetLayoutManager(_layoutManager);
-            _rView.AddOnScrollListener(new EchoRecyclerViewListener());
             _rView.SwapAdapter(_adapter, true);
             _adapter.NotifyDataSetChanged();
 
+            _progressBar.Visibility = _layoutManager.ItemCount == 0 ? ViewStates.Visible : ViewStates.Gone;
+
             //swipe down refresh
             var refresher = view.FindViewById<SwipeRefreshLayout>(Resource.Id.refresher);
+            //refresher.SetFitsSystemWindows(false);
             refresher.Refresh += delegate
             {
                 UpdateContent();
@@ -67,6 +71,14 @@ namespace Echo.Blog
         private void OnPictureClick(object sender, string personUrl)
         {
             var intent = new Intent(_context, typeof(BlogHistoryActivity));
+
+
+            //request that the new Activity launches adjacent if possible
+            intent.AddFlags(ActivityFlags.LaunchAdjacent);
+
+
+            //required for adjacent activity mode
+            intent.AddFlags(ActivityFlags.NewTask);
             intent.PutExtra("PersonUrl", personUrl);
             _context.StartActivity(intent);
         }
@@ -78,6 +90,14 @@ namespace Echo.Blog
             if (!Guid.TryParse(id, out itemId) || _content.ContentList.FirstOrDefault(n => n.ItemId == itemId) == null)
                 return;
             var intent = new Intent(_context, typeof (BlogActivity));
+
+
+            //request that the new Activity launches adjacent if possible
+            intent.AddFlags(ActivityFlags.LaunchAdjacent);
+
+
+            //required for adjacent activity mode
+            intent.AddFlags(ActivityFlags.NewTask);
             intent.PutExtra("ID", id);
             _context.StartActivity(intent);
         }

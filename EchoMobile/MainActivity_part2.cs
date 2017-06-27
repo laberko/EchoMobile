@@ -3,23 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Android.Support.Design.Widget;
+using Android.App;
 using Echo.Person;
 using HtmlAgilityPack;
 using Android.Graphics;
+using Android.Widget;
 using Echo.Player;
 using Echo.Show;
 using Plugin.Settings;
 using Plugin.Settings.Abstractions;
-using XamarinBindings.MaterialProgressBar;
+//using XamarinBindings.MaterialProgressBar;
 
 namespace Echo
 {
     //common static data and methods
-    public static class Common
+    public partial class MainActivity
     {
         public static int DisplayWidth;
-        public static FloatingActionButton Fab;
+        public static int CurrentPosition;
         private static int _httpConnects;                       //active http connections counter (max 10 sessions)
         public static List<PersonItem> PersonList;
         public static List<AbstractContentFactory> BlogContentList;
@@ -30,9 +31,28 @@ namespace Echo
         public static DateTime[] SelectedDates;
         public static EchoMediaPlayer EchoPlayer;
         public static EchoPlayerServiceBinder ServiceBinder;
-        public static readonly string[] ColorPrimary = { "#F44336", "#2196F3", "#4CAF50" };         //red, blue, green
-        public static readonly string[] ColorPrimaryDark = { "#D32F2F", "#1976D2", "#388E3C" };
-        public static readonly string[] ColorAccent = { "#B71C1C", "#0D47A1", "#1B5E20" };
+        public static Notification EchoNotification;
+        //public const string OnlineRadioUrl = @"http://81.19.85.197/echo.mp3";
+        //public const string OnlineRadioUrl = @"http://184.154.58.146:29378/ch12_64s.mp3";
+        public const string OnlineRadioUrl = @"http://184.154.58.146:29378/ch12_16.mp3";
+        public const string SmsNumber = "+79859704545";
+        public const string CallNumber = "tel:+74953633659";
+        public const string VoteNumber1 = "tel:+74956600664";
+        public const string VoteNumber2 = "tel:+74956600665";
+
+        private static readonly string[] PrimaryColor = { "#b84040", "#3F51B5", "#009688", "#FF5722" };   //red (my), Indigo, Teal, Deep Orange    500
+        public static readonly string[] PrimaryDarkColor = { "#9e2f2f", "#303F9F", "#00796B", "#E64A19" };                                          //700
+        private static readonly string[] AccentColor = { "#8a2121", "#1A237E", "#004D40", "#BF360C" };                                              //900
+
+        //private static readonly string[] PrimaryColor = { "#F44336", "#2196F3", "#4CAF50", "#FFC107" };   //red, blue, green, amber      500
+        //public static readonly string[] PrimaryDarkColor = { "#D32F2F", "#1976D2", "#388E3C", "#FFA000" };                             //700
+        //private static readonly string[] AccentColor = { "#B71C1C", "#0D47A1", "#1B5E20", "#FF6F00" };                                 //900
+
+        private static readonly Color[] TextColor = { Color.ParseColor("#333333"), Color.ParseColor("#DDDDDD") };        //light theme, dark theme
+        private static readonly Color[] DarkTextColor = { Color.ParseColor("#222222"), Color.ParseColor("#EEEEEE") };
+        private static readonly string[] WebTextColor = { @"""#222222""", @"""#DDDDDD""" };
+        private static readonly string[] WebLinkColor = { @"""#0000FF""", @"""#FFFF00""" };
+
 
         public enum PersonType
         {
@@ -61,6 +81,9 @@ namespace Echo
 
         private const string SetBlogHistorySizeKey = "echomobile_bloghistorysize_key";
         private const int SetBlogHistorySizeDefault = 20;
+
+        private const string SetThemeKey = "echomobile_theme_key";
+        private const int SetThemeDefault = Resource.Style.MyTheme_Light;
 
 
         public static int FontSize
@@ -107,8 +130,115 @@ namespace Echo
                 AppSettings.AddOrUpdateValue(SetBlogHistorySizeKey, value);
             }
         }
+        public static int Theme
+        {
+            get
+            {
+                return AppSettings.GetValueOrDefault(SetThemeKey, SetThemeDefault);
+            }
+            set
+            {
+                AppSettings.AddOrUpdateValue(SetThemeKey, value);
+            }
+        }
 
         #endregion
+
+        public static string[] ColorPrimary
+        {
+            get
+            {
+                switch (Theme)
+                {
+                    case Resource.Style.MyTheme_Light:
+                        return PrimaryColor;
+                    case Resource.Style.MyTheme_Dark:
+                        return AccentColor;
+                    default:
+                        return PrimaryColor;
+                }
+            }
+        }
+
+        public static string[] ColorAccent
+        {
+            get
+            {
+                switch (Theme)
+                {
+                    case Resource.Style.MyTheme_Light:
+                        return AccentColor;
+                    case Resource.Style.MyTheme_Dark:
+                        return PrimaryColor;
+                    default:
+                        return AccentColor;
+                }
+            }
+        }
+
+        public static Color MainTextColor
+        {
+            get
+            {
+                switch (Theme)
+                {
+                    case Resource.Style.MyTheme_Light:
+                        return TextColor[0];
+                    case Resource.Style.MyTheme_Dark:
+                        return TextColor[1];
+                    default:
+                        return TextColor[0];
+                }
+            }
+        }
+
+        public static Color MainDarkTextColor
+        {
+            get
+            {
+                switch (Theme)
+                {
+                    case Resource.Style.MyTheme_Light:
+                        return DarkTextColor[0];
+                    case Resource.Style.MyTheme_Dark:
+                        return DarkTextColor[1];
+                    default:
+                        return DarkTextColor[0];
+                }
+            }
+        }
+
+        public static string WebViewTextColor
+        {
+            get
+            {
+                switch (Theme)
+                {
+                    case Resource.Style.MyTheme_Light:
+                        return WebTextColor[0];
+                    case Resource.Style.MyTheme_Dark:
+                        return WebTextColor[1];
+                    default:
+                        return WebTextColor[0];
+                }
+            }
+        }
+
+        public static string WebViewLinkColor
+        {
+            get
+            {
+                switch (Theme)
+                {
+                    case Resource.Style.MyTheme_Light:
+                        return WebLinkColor[0];
+                    case Resource.Style.MyTheme_Dark:
+                        return WebLinkColor[1];
+                    default:
+                        return WebLinkColor[0];
+                }
+            }
+        }
 
         //download and parse a person's data
         public static async Task<PersonItem> GetPerson(string url, PersonType type)
@@ -225,9 +355,8 @@ namespace Echo
             return bitmap;
         }
 
-
-        public static async Task<List<AbstractContent>> UpdateShowHistory(MaterialProgressBar progressBar, string searchUrl,
-            List<AbstractContent> currentContent = null)
+        //parse show history using specific url
+        public static async Task<List<AbstractContent>> UpdateShowHistory(ProgressBar progressBar, string searchUrl, List<AbstractContent> currentContent = null)
         {
             //if not user's shows search
             if (currentContent == null)
@@ -272,7 +401,8 @@ namespace Echo
                     if (metaDiv == null)
                         continue;
                     var timeSpan = metaDiv.Descendants("span").FirstOrDefault(s => s.Attributes.Contains("class") && s.Attributes["class"].Value == "datetime");
-                    if (timeSpan == null || !DateTime.TryParse(timeSpan.Attributes["title"].Value, out showDateTime))
+                    var dateString = timeSpan.Attributes["title"].Value;
+                    if (timeSpan == null || !DateTime.TryParse(dateString, out showDateTime))
                         continue;
                     //audio and text urls
                     var urlNode = metaDiv.Descendants("a").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "view");
@@ -316,9 +446,16 @@ namespace Echo
                     //subtitle
                     var subTitleDiv = div.Descendants("p").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "txt");
                     var subTitleA = subTitleDiv?.Descendants("a").FirstOrDefault(a => a.Attributes.Contains("class") && a.Attributes["class"].Value == "dark");
-                    var subTitleNode = subTitleA?.Descendants("strong").FirstOrDefault(a => a.Attributes.Contains("class") && a.Attributes["class"].Value == "title type2");
+                    var subTitleNode = subTitleA?.Descendants("strong").FirstOrDefault();
                     if (subTitleNode != null)
                         showSubTitle = subTitleNode.InnerText;
+                    else
+                    {
+                        subTitleA = div.ChildNodes.FirstOrDefault(n => n.Name == "a");
+                        subTitleNode = subTitleA?.Descendants("strong").FirstOrDefault();
+                        if (subTitleNode != null)
+                            showSubTitle = subTitleNode.InnerText;
+                    }
                     //picture
                     var pictureDiv = div.Descendants("p").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("author type1"));
                     var pictureA = pictureDiv?.Descendants("a").FirstOrDefault(a => a.Attributes.Contains("class") && a.Attributes["class"].Value == "dark");
@@ -344,6 +481,5 @@ namespace Echo
             progressBar.Visibility = Android.Views.ViewStates.Gone;
             return currentContent;
         }
-
     }
 }

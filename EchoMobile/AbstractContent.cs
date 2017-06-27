@@ -7,7 +7,7 @@ namespace Echo
 {
     public abstract class AbstractContent
     {
-        public readonly Common.ContentType ItemType;
+        public readonly MainActivity.ContentType ItemType;
         public Guid ItemId;
         public string ItemUrl;
         public string ItemSoundUrl;
@@ -22,7 +22,7 @@ namespace Echo
         public DateTime ItemDate;
         public string ItemRootUrl;
 
-        protected AbstractContent(Common.ContentType itemType)
+        protected AbstractContent(MainActivity.ContentType itemType)
         {
             ItemType = itemType;
         }

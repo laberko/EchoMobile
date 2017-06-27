@@ -1,23 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
+using Android.Support.Design.Widget;
 using Android.Support.V7.App;
 using Android.Support.V7.Widget;
+using Android.Text;
 using Android.Views;
+using Android.Widget;
 using Echo.Blog;
-using XamarinBindings.MaterialProgressBar;
+using Echo.Person;
+using Plugin.Connectivity;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
-namespace Echo.Person
+namespace Echo.BlogHistory
 {
     [Activity(Label = "",
         Icon = "@drawable/icon",
         LaunchMode = LaunchMode.SingleTask,
+        ResizeableActivity = true,
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
     public class BlogHistoryActivity : AppCompatActivity
     {
@@ -26,34 +32,43 @@ namespace Echo.Person
 
         protected override async void OnCreate(Bundle bundle)
         {
+            SetTheme(MainActivity.Theme);
             base.OnCreate(bundle);
 
             SetContentView(Resource.Layout.HistoryView);
             var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
-            SetSupportActionBar(toolbar);
-            if ((int)Build.VERSION.SdkInt > 19)
-            {
-                Window.SetNavigationBarColor(Color.ParseColor(Common.ColorPrimaryDark[1]));
-                Window.SetStatusBarColor(Color.ParseColor(Common.ColorPrimaryDark[1]));
-            }
-            toolbar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[1]));
-            SupportActionBar.Subtitle = Resources.GetString(Resource.String.blog);
-            var progressBar = FindViewById<MaterialProgressBar>(Resource.Id.historyProgress);
+            
+            toolbar.Subtitle = Resources.GetString(Resource.String.blog);
+
+            Window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
+            Window.SetNavigationBarColor(Color.ParseColor(MainActivity.PrimaryDarkColor[1]));
+            Window.SetStatusBarColor(Color.ParseColor(MainActivity.PrimaryDarkColor[1]));
+            toolbar.SetBackgroundColor(Color.ParseColor(MainActivity.ColorPrimary[1]));
+
+            var progressBar = FindViewById<ProgressBar>(Resource.Id.historyProgress);
+            progressBar.ScaleX = 1.5f;
+            progressBar.ScaleY = 1.5f;
             progressBar.Visibility = ViewStates.Visible;
-            progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
+            progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(MainActivity.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
+
             var personUrl = Intent.GetStringExtra("PersonUrl");
-            _person = await Common.GetPerson(personUrl, Common.PersonType.Blog);
+            _person = await MainActivity.GetPerson(personUrl, MainActivity.PersonType.Blog);
             if (_person == null)
             {
                 progressBar.Visibility = ViewStates.Gone;
                 Finish();
                 return;
             }
-            SupportActionBar.Title = _person.PersonName;
+            toolbar.Title = _person.PersonName;
+            SetSupportActionBar(toolbar);
+
+            if (!await CheckConnectivity())
+                return;
+
             //refresh history content
             await _person.GetBlogHistory(progressBar);
-            _content = _person.PersonContent.Where(c => c.ItemType == Common.ContentType.Blog)
-                .OrderByDescending(c => c.ItemDate).Take(Common.BlogHistorySize).ToList();
+            _content = _person.PersonContent.Where(c => c.ItemType == MainActivity.ContentType.Blog)
+                .OrderByDescending(c => c.ItemDate).Take(MainActivity.BlogHistorySize).ToList();
 
             //RecyclerView
             var adapter = new BlogHistoryAdapter
@@ -98,6 +113,18 @@ namespace Echo.Person
             if (item.ItemId == Resource.Id.back)
                 OnBackPressed();
             return base.OnOptionsItemSelected(item);
+        }
+
+        private async Task<bool> CheckConnectivity()
+        {
+            if (await CrossConnectivity.Current.IsRemoteReachable("echo.msk.ru"))
+                return true;
+            var message = "<font color=\"#ffffff\">" + Resources.GetText(Resource.String.network_error) + "</font>";
+            Snackbar.Make(FindViewById<CoordinatorLayout>(Resource.Id.main_content),
+                Html.FromHtml(message, FromHtmlOptions.ModeLegacy), 60000)
+                .SetAction(Resources.GetText(Resource.String.close), v => { OnBackPressed(); })
+                .Show();
+            return false;
         }
     }
 }

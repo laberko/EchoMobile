@@ -8,11 +8,12 @@ namespace Echo.Show
     //ViewHolder holds references to the UI components within the CardView 
     public class ShowViewHolder : RecyclerView.ViewHolder
     {
-        public TextView Date { get; private set; }
-        public TextView Title { get; private set; }
-        public TextView Moderators { get; private set; }
-        public TextView Guests { get; private set; }
-        private ImageButton DownloadButton { get; }
+        public EchoTextView Date { get; private set; }
+        public EchoTextView Title { get; private set; }
+        public EchoTextView SubTitle { get; private set; }
+        public EchoTextView Moderators { get; private set; }
+        public EchoTextView Guests { get; private set; }
+        public ImageButton DownloadButton { get; }
         public ImageButton ListenButton { get; }
         public LinearLayoutCompat ButtonsLayout { get; private set; }
         public string Id;
@@ -21,10 +22,11 @@ namespace Echo.Show
         public ShowViewHolder(View itemView, Action<string> onItemClick, Action<string> onDownloadClick, Action<string> onListenClick) : base(itemView)
         {
             //locate and cache view references
-            Date = ItemView.FindViewById<TextView>(Resource.Id.showDate);
-            Title = ItemView.FindViewById<TextView>(Resource.Id.showTitle);
-            Moderators = ItemView.FindViewById<TextView>(Resource.Id.showModerators);
-            Guests = ItemView.FindViewById<TextView>(Resource.Id.showGuests);
+            Date = ItemView.FindViewById<EchoTextView>(Resource.Id.showDate);
+            Title = ItemView.FindViewById<EchoTextView>(Resource.Id.showTitle);
+            SubTitle = ItemView.FindViewById<EchoTextView>(Resource.Id.showSubTitle);
+            Moderators = ItemView.FindViewById<EchoTextView>(Resource.Id.showModerators);
+            Guests = ItemView.FindViewById<EchoTextView>(Resource.Id.showGuests);
             DownloadButton = ItemView.FindViewById<ImageButton>(Resource.Id.showDownload);
             ListenButton = ItemView.FindViewById<ImageButton>(Resource.Id.showListen);
             ButtonsLayout = ItemView.FindViewById<LinearLayoutCompat>(Resource.Id.showButtons);

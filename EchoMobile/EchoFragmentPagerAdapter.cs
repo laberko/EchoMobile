@@ -12,7 +12,7 @@ namespace Echo
 
         public EchoFragmentPagerAdapter(FragmentManager fm) : base(fm)
         {
-            _fragmentList = new EchoViewPagerFragment[3];
+            _fragmentList = new EchoViewPagerFragment[4];
         }
 
         public override int Count => _fragmentList.Length;

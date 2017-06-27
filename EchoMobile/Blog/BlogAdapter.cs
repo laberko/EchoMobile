@@ -36,7 +36,7 @@ namespace Echo.Blog
                 {
                     try
                     {
-                        blog.ItemPicture = await Common.GetImage(blog.ItemPictureUrl, Common.DisplayWidth / 5);
+                        blog.ItemPicture = await MainActivity.GetImage(blog.ItemPictureUrl, MainActivity.DisplayWidth / 5);
                     }
                     catch
                     {
@@ -47,13 +47,9 @@ namespace Echo.Blog
             }
             else
                 viewHolder.Picture.SetImageBitmap(null);
-            viewHolder.Author.Text = blog.ItemAuthorName;
-            viewHolder.Author.SetTextColor(Color.ParseColor(Common.ColorAccent[1]));
-            viewHolder.Author.SetBackgroundColor(Color.Transparent);
-            viewHolder.Author.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Title.Text = blog.ItemTitle;
-            viewHolder.Title.SetBackgroundColor(Color.Transparent);
-            viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+
+            viewHolder.Author.Setup(blog.ItemAuthorName, Color.ParseColor(MainActivity.ColorAccent[1]), TypefaceStyle.Bold, MainActivity.FontSize);
+            viewHolder.Title.Setup(blog.ItemTitle, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize);
             viewHolder.Id = blog.ItemId.ToString();
             viewHolder.AuthorUrl = blog.ItemAuthorUrl;
         }

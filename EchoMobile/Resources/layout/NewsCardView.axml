@@ -9,26 +9,25 @@
         app:cardMaxElevation="0dp"
         app:cardPreventCornerOverlap="false"
         app:cardUseCompatPadding="false"
+        app:cardBackgroundColor="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <GridLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:columnCount="2"
             android:alignmentMode="alignBounds"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:background="@android:color/transparent"
             android:clipToPadding="true"
             android:fitsSystemWindows="true">
-            <TextView
-                android:textStyle="bold"
-                android:text=""
+            <net.laberko.EchoTextView
                 android:id="@+id/newsDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="left|fill" />
-            <TextView
-                android:text=""
+            <net.laberko.EchoTextView
                 android:id="@+id/newsTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

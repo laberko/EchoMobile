@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using Android.Graphics;
 using Android.Support.V7.Widget;
 using Android.Views;
+using Echo.Person;
 using Echo.Show;
 
-namespace Echo.Person
+namespace Echo.ShowHistory
 {
     //RecyclerView adapter to connect the data set (blog) to the RecyclerView
     public class ShowHistoryAdapter : RecyclerView.Adapter
@@ -33,7 +34,7 @@ namespace Echo.Person
                 return;
             if (!string.IsNullOrEmpty(show.ItemPictureUrl))
             {
-                var picture = await show.GetPicture(Common.DisplayWidth/5);
+                var picture = await show.GetPicture(MainActivity.DisplayWidth/5);
                 if (picture != null)
                 {
                     viewHolder.Picture.SetImageBitmap(picture);
@@ -44,19 +45,12 @@ namespace Echo.Person
             }
             else
                 viewHolder.Picture.Visibility = ViewStates.Gone;
-            viewHolder.Date.Text = show.ItemDate.ToString("f");
-            viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[2]));
-            viewHolder.Date.SetBackgroundColor(Color.Transparent);
-            viewHolder.Date.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Title.Text = show.ItemTitle;
-            viewHolder.Title.SetBackgroundColor(Color.Transparent);
-            viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+
+            viewHolder.Date.Setup(show.ItemDate.ToString("f"), Color.ParseColor(MainActivity.ColorAccent[2]),
+                TypefaceStyle.Bold, MainActivity.FontSize);
+            viewHolder.Title.Setup(show.ItemTitle, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize);
             if (!string.IsNullOrEmpty(show.ItemSubTitle))
-            {
-                viewHolder.SubTitle.Text = show.ItemSubTitle;
-                viewHolder.SubTitle.SetBackgroundColor(Color.Transparent);
-                viewHolder.SubTitle.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize - 4);
-            }
+                viewHolder.SubTitle.Setup(show.ItemSubTitle, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize - 4);
             else
                 viewHolder.SubTitle.Visibility = ViewStates.Gone;
             viewHolder.Id = show.ItemId.ToString();

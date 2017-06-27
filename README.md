@@ -7,7 +7,7 @@ of sound files published on the site.
 
 All content is in Russian.
 
-Android 4.0 and later supported.
+Android 5.0 and later supported.
 
 [Download APK](https://github.com/laberko/EchoMobile/releases/latest)
 

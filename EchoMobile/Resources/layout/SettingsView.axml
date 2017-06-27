@@ -7,14 +7,14 @@
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar">
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="?attr/actionBarSize"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar"
+            app:popupTheme="@style/Popup"
             app:layout_scrollFlags="scroll|enterAlways" />
     </android.support.design.widget.AppBarLayout>
     <android.support.v4.widget.NestedScrollView
@@ -34,11 +34,37 @@
                 android:gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <TextView
+                <net.laberko.EchoTextView
                     android:layout_weight="3"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
+                    android:id="@+id/downloadFolderText"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:padding="8dp"
+                    app:layout_gravity="left" />
+                <Spinner
+                    android:layout_weight="2"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginRight="8dp"
+                    android:id="@+id/downloadFolderSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_gravity="right" />
+            </LinearLayout>
+            <View
+                style="@style/Divider" />
+            <LinearLayout
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <net.laberko.EchoTextView
+                    android:layout_weight="3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:id="@+id/bigFontText"
                     android:layout_marginLeft="8dp"
                     android:layout_marginTop="8dp"
@@ -63,12 +89,11 @@
                 android:gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <TextView
+                <net.laberko.EchoTextView
                     android:layout_weight="3"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:id="@+id/downloadFolderText"
+                    android:id="@+id/themeText"
                     android:layout_marginLeft="8dp"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
@@ -79,7 +104,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
                     android:layout_marginRight="8dp"
-                    android:id="@+id/downloadFolderSpinner"
+                    android:id="@+id/themeSpinner"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     app:layout_gravity="right" />
@@ -91,11 +116,10 @@
                 android:gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <TextView
+                <net.laberko.EchoTextView
                     android:layout_weight="5"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
                     android:id="@+id/blogHistorySizeText"
                     android:layout_marginLeft="8dp"
                     android:layout_marginTop="8dp"
@@ -119,11 +143,10 @@
                 android:gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <TextView
+                <net.laberko.EchoTextView
                     android:layout_weight="5"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
                     android:id="@+id/showHistorySizeText"
                     android:layout_marginLeft="8dp"
                     android:layout_marginTop="8dp"

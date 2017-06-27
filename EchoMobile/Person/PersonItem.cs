@@ -6,7 +6,9 @@ using Android.Graphics;
 using Echo.Blog;
 using HtmlAgilityPack;
 using System.Linq;
-using XamarinBindings.MaterialProgressBar;
+using Android.Widget;
+
+//using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.Person
 {
@@ -18,10 +20,10 @@ namespace Echo.Person
         public string PersonPhotoUrl;
         private Bitmap _personPhoto;
         public string PersonAbout;
-        public readonly Common.PersonType PersonType;
+        public readonly MainActivity.PersonType PersonType;
         public List<AbstractContent> PersonContent;
 
-        public PersonItem(Common.PersonType personType)
+        public PersonItem(MainActivity.PersonType personType)
         {
             PersonType = personType;
             PersonContent = new List<AbstractContent>();
@@ -58,18 +60,18 @@ namespace Echo.Person
             }
         }
 
-        public async Task GetBlogHistory(MaterialProgressBar progressBar)
+        public async Task GetBlogHistory(ProgressBar progressBar)
         {
             var itemCounter = 0;
             for (var i = 1;; i ++)
             {
-                if (itemCounter >= Common.BlogHistorySize || PersonContent.Count >= Common.BlogHistorySize)
+                if (itemCounter >= MainActivity.BlogHistorySize || PersonContent.Count >= MainActivity.BlogHistorySize)
                     break;
                 var pageUrl = PersonUrl + @"archive/" + i + ".html";
                 HtmlDocument root;
                 try
                 {
-                    root = await Common.GetHtml(pageUrl);
+                    root = await MainActivity.GetHtml(pageUrl);
                 }
                 catch
                 {
@@ -90,7 +92,7 @@ namespace Echo.Person
                     var contentUrl = "http://echo.msk.ru" + contentH?.Descendants("a").FirstOrDefault().GetAttributeValue("href", string.Empty);
                     if (PersonContent.Any(c => c.ItemUrl == contentUrl) || contentUrl == "http://echo.msk.ru")
                     {
-                        if (PersonContent.Count >= Common.BlogHistorySize)
+                        if (PersonContent.Count >= MainActivity.BlogHistorySize)
                         {
                             progressBar.Visibility = Android.Views.ViewStates.Gone;
                             return;
@@ -99,7 +101,7 @@ namespace Echo.Person
                     }
                     var contentDate = contentDiv.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "date").InnerText;
                     DateTime blogDate;
-                    PersonContent.Add(new BlogItem(Common.ContentType.Blog)
+                    PersonContent.Add(new BlogItem(MainActivity.ContentType.Blog)
                     {
                         ItemId = Guid.NewGuid(),
                         ItemUrl = "http://echo.msk.ru" + contentH?.Descendants("a").FirstOrDefault().GetAttributeValue("href", string.Empty),

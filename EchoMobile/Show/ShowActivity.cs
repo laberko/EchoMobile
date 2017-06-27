@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
+using Android.Support.Design.Widget;
 using Android.Support.V4.Content;
 using Android.Support.V7.App;
+using Android.Text;
 using Android.Views;
-using Android.Webkit;
 using Android.Widget;
 using Echo.Person;
 using Echo.Player;
-using XamarinBindings.MaterialProgressBar;
+using Echo.ShowHistory;
+using Plugin.Connectivity;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 namespace Echo.Show
@@ -22,17 +25,18 @@ namespace Echo.Show
     [Activity(Label = "",
         Icon = "@drawable/icon",
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
+        ResizeableActivity = true,
         LaunchMode = LaunchMode.SingleTop)]
-    public class ShowActivity : AppCompatActivity, SeekBar.IOnSeekBarChangeListener
+    public class ShowActivity : AppCompatActivity, SeekBar.IOnSeekBarChangeListener, IPlayerInitiator
     {
         private SeekBar _seekBar;
         private ImageButton _playButton;
         private ShowItem _show;
-        private MaterialProgressBar _progressBar;
-        private WebView _textWebView;
+        private ProgressBar _progressBar;
+        private EchoWebView _textWebView;
         private bool _playerReady;
         private bool _personsReady;
-        public EchoPlayerServiceBinder Binder;
+        private EchoPlayerServiceBinder _binder;
         private EchoPlayerServiceConnection _mediaPlayerServiceConnection;
         private Intent _mediaPlayerServiceIntent;
         private EchoPlayerService _echoPlayerService;
@@ -40,13 +44,14 @@ namespace Echo.Show
 
         protected override async void OnCreate(Bundle bundle)
         {
+            SetTheme(MainActivity.Theme);
             base.OnCreate(bundle);
 
             Guid showId;
             string showText;
 
             //no collection of daily shows contents
-            if (Common.ShowContentList == null)
+            if (MainActivity.ShowContentList == null)
             {
                 Finish();
                 return;
@@ -54,18 +59,17 @@ namespace Echo.Show
 
             SetContentView(Resource.Layout.ShowItemView);
             var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
-            toolbar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[2]));
-            SetSupportActionBar(toolbar);
+            toolbar.SetBackgroundColor(Color.ParseColor(MainActivity.ColorPrimary[2]));
+            
+            Window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
+            Window.SetNavigationBarColor(Color.ParseColor(MainActivity.PrimaryDarkColor[2]));
+            Window.SetStatusBarColor(Color.ParseColor(MainActivity.PrimaryDarkColor[2]));
 
-            if ((int) Build.VERSION.SdkInt > 19)
-            {
-                Window.SetNavigationBarColor(Color.ParseColor(Common.ColorPrimaryDark[2]));
-                Window.SetStatusBarColor(Color.ParseColor(Common.ColorPrimaryDark[2]));
-            }
-
-            _progressBar = FindViewById<MaterialProgressBar>(Resource.Id.showsProgress);
+            _progressBar = FindViewById<ProgressBar>(Resource.Id.showsProgress);
+            _progressBar.ScaleX = 1.5f;
+            _progressBar.ScaleY = 1.5f;
             _progressBar.Visibility = ViewStates.Visible;
-            _progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[2]), PorterDuff.Mode.SrcIn);
+            _progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(MainActivity.ColorPrimary[2]), PorterDuff.Mode.SrcIn);
             _seekBar = FindViewById<SeekBar>(Resource.Id.seekBar);
             _seekBar.SetOnSeekBarChangeListener(this);
             _playButton = FindViewById<ImageButton>(Resource.Id.showPlay);
@@ -74,7 +78,7 @@ namespace Echo.Show
             _searchPersonName = Intent.GetStringExtra("PersonName");
             if (!string.IsNullOrEmpty(_searchPersonName))
             {
-                var person = Common.PersonList.FirstOrDefault(p => (p.PersonType == Common.PersonType.Show && p.PersonName == _searchPersonName));
+                var person = MainActivity.PersonList.FirstOrDefault(p => (p.PersonType == MainActivity.PersonType.Show && p.PersonName == _searchPersonName));
                 if (person != null && Guid.TryParse(Intent.GetStringExtra("ID"), out showId))
                     _show = person.PersonContent.FirstOrDefault(s => s.ItemId == showId) as ShowItem;
             }
@@ -82,13 +86,13 @@ namespace Echo.Show
             {
                 //was activity called from search for the shows with a certain name?
                 if (Intent.GetBooleanExtra("ShowSearch", false))
-                    _show = Common.ShowHistoryList.FirstOrDefault(s => s.ItemId == showId) as ShowItem;
+                    _show = MainActivity.ShowHistoryList.FirstOrDefault(s => s.ItemId == showId) as ShowItem;
                 else
                 {
                     //activity was called from MainActivity
-                    foreach (var showContent in Common.ShowContentList)
+                    foreach (var showContent in MainActivity.ShowContentList)
                     {
-                        _show = showContent.ContentList.FirstOrDefault(s => (s.ItemType == Common.ContentType.Show && s.ItemId == showId)) as ShowItem;
+                        _show = showContent.ContentList.FirstOrDefault(s => (s.ItemType == MainActivity.ContentType.Show && s.ItemId == showId)) as ShowItem;
                         if (_show != null)
                             break;
                     }
@@ -103,8 +107,12 @@ namespace Echo.Show
                 return;
             }
 
-            SupportActionBar.Title = _show.ItemTitle;
-            SupportActionBar.Subtitle = _show.ItemDate.ToString(_show.ItemDate.Date != DateTime.Now.Date ? "dddd d MMMM yyyy, HH:mm" : "HH:mm");
+            toolbar.Title = _show.ItemTitle;
+            toolbar.Subtitle = _show.ItemDate.ToString(_show.ItemDate.Date != DateTime.Now.Date ? "dddd d MMMM yyyy, HH:mm" : "HH:mm");
+            SetSupportActionBar(toolbar);
+
+            if (!await CheckConnectivity())
+                return;
 
             //get (sub)title and text
             try
@@ -119,22 +127,20 @@ namespace Echo.Show
             }
             if (!string.IsNullOrEmpty(showText))
             {
-                _textWebView = FindViewById<WebView>(Resource.Id.showText);
-                _textWebView.SetBackgroundColor(Color.Transparent);
-                _textWebView.Settings.JavaScriptEnabled = true;
-                _textWebView.Settings.StandardFontFamily = "serif";
-                _textWebView.LoadDataWithBaseURL("", showText, "text/html", "UTF-8", "");
-                _textWebView.Settings.DefaultFontSize = Common.FontSize;
+                _textWebView = FindViewById<EchoWebView>(Resource.Id.showText);
+                _textWebView.Setup(showText);
             }
 
-            var subTitleTextView = FindViewById<TextView>(Resource.Id.showSubTitle);
-            subTitleTextView.Text = string.IsNullOrEmpty(_show.ItemSubTitle) ? _show.ItemTitle : _show.ItemSubTitle;
-            subTitleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
-            //subTitleTextView.SetTextColor(Color.Black);
+            var subTitleTextView = FindViewById<EchoTextView>(Resource.Id.showSubTitle);
+            subTitleTextView.Setup(string.IsNullOrEmpty(_show.ItemSubTitle) ? _show.ItemTitle : _show.ItemSubTitle,
+                MainActivity.MainDarkTextColor, TypefaceStyle.Bold, MainActivity.FontSize + 4);
 
             if (!string.IsNullOrEmpty(_show.ItemRootUrl))
             {
                 var historyButton = FindViewById<ImageButton>(Resource.Id.showHistoryButton);
+                historyButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                        ? ContextCompat.GetDrawable(this, Resource.Drawable.ic_search_black_48dp)
+                        : ContextCompat.GetDrawable(this, Resource.Drawable.ic_search_white_48dp));
                 historyButton.Visibility = ViewStates.Visible;
                 historyButton.Click += OnHistoryButtonClick;
             }
@@ -157,19 +163,32 @@ namespace Echo.Show
             PopulatePeopleList(_show.ShowGuests);
         }
 
-        private void OnPlayButtonClick(object sender, EventArgs e)
+        private async void OnPlayButtonClick(object sender, EventArgs e)
         {
-            _playButton.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black));
-            //now playing show is different - save its position and replace with current
-            if (Common.EchoPlayer.DataSource != _show.ItemSoundUrl)
+            try
             {
-                if (PlayerService.Show != null)
-                    PlayerService.Show.ShowPlayerPosition = PlayerService.Position;
-                PlayerService.Show = _show;
-                //activity was started from a person's show search result list - pass search person name to the player service
-                PlayerService.SearchPersonName = !string.IsNullOrEmpty(_searchPersonName) ? _searchPersonName : string.Empty;
+                if (PlayerService == null || !await CheckConnectivity())
+                    return;
+                _playButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                    ? ContextCompat.GetDrawable(this, Resource.Drawable.pause_black)
+                    : ContextCompat.GetDrawable(this, Resource.Drawable.ic_pause_circle_outline_white_48dp));
+                //now playing show is different - save its position and replace with current
+                if (MainActivity.EchoPlayer.DataSource != _show.ItemSoundUrl)
+                {
+                    if (PlayerService.Show != null)
+                        PlayerService.Show.ShowPlayerPosition = PlayerService.Position;
+                    PlayerService.Show = _show;
+                    //activity was started from a person's show search result list - pass search person name to the player service
+                    PlayerService.SearchPersonName = !string.IsNullOrEmpty(_searchPersonName)
+                        ? _searchPersonName
+                        : string.Empty;
+                }
+                PlayerService.PlayPause();
             }
-            PlayerService.PlayPause();
+            catch
+            {
+                // ignored
+            }
         }
 
         private void OnHistoryButtonClick(object sender, EventArgs e)
@@ -185,9 +204,22 @@ namespace Echo.Show
         {
             get
             {
-                if (Binder == null || _mediaPlayerServiceConnection == null)
+                if (_binder == null || _mediaPlayerServiceConnection == null)
                     InitilizeMedia();
-                return _echoPlayerService ?? (_echoPlayerService = Binder?.GetMediaPlayerService());
+                return _echoPlayerService ?? (_echoPlayerService = _binder?.GetMediaPlayerService());
+            }
+        }
+
+        EchoPlayerServiceBinder IPlayerInitiator.Binder
+        {
+            get
+            {
+                return _binder;
+            }
+
+            set
+            {
+                _binder = value;
             }
         }
 
@@ -200,7 +232,7 @@ namespace Echo.Show
 
         public void OnPlaying(object sender, EventArgs e)
         {
-            if (Common.EchoPlayer.DataSource != _show.ItemSoundUrl)
+            if (MainActivity.EchoPlayer.DataSource != _show.ItemSoundUrl)
                 return;
             //update seekbar if this show is currently playing
             _seekBar.Max = PlayerService.Duration;
@@ -209,7 +241,7 @@ namespace Echo.Show
 
         public void OnBuffering(object sender, EventArgs e)
         {
-            if (_show == null || Common.EchoPlayer == null || Common.EchoPlayer.DataSource != _show.ItemSoundUrl)
+            if (_show == null || MainActivity.EchoPlayer == null || MainActivity.EchoPlayer.DataSource != _show.ItemSoundUrl)
                 return;
             _seekBar.SecondaryProgress = PlayerService.Buffered;
         }
@@ -217,17 +249,25 @@ namespace Echo.Show
         private void OnPlaybackStarted(object sender, string url)
         {
             if (_show != null && url == _show.ItemSoundUrl)
-                RunOnUiThread(() => _playButton.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black)));
+                RunOnUiThread(() =>
+                _playButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                        ? ContextCompat.GetDrawable(this, Resource.Drawable.pause_black)
+                        : ContextCompat.GetDrawable(this, Resource.Drawable.ic_pause_circle_outline_white_48dp)));
         }
 
         private void OnPlaybackPaused(object sender, string url)
         {
             if (_show != null && (url == _show.ItemSoundUrl || url == null))
-                RunOnUiThread(() => _playButton.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.play_black)));
+                RunOnUiThread(() =>
+                _playButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                        ? ContextCompat.GetDrawable(this, Resource.Drawable.play_black)
+                        : ContextCompat.GetDrawable(this, Resource.Drawable.ic_play_circle_outline_white_48dp)));
         }
 
         private void InitilizeMedia()
         {
+            if (MainActivity.EchoPlayer == null)
+                MainActivity.EchoPlayer = new EchoMediaPlayer();
             _mediaPlayerServiceIntent = new Intent(ApplicationContext, typeof(EchoPlayerService));
             //_mediaPlayerServiceConnection invokes ServiceConnected()
             _mediaPlayerServiceConnection = new EchoPlayerServiceConnection(this);
@@ -240,14 +280,18 @@ namespace Echo.Show
             var playLayout = FindViewById<TableLayout>(Resource.Id.playLayout);
             try
             {
-                Common.EchoPlayer.PlaybackStarted += OnPlaybackStarted;
-                Common.EchoPlayer.PlaybackPaused += OnPlaybackPaused;
+                MainActivity.EchoPlayer.PlaybackStarted += OnPlaybackStarted;
+                MainActivity.EchoPlayer.PlaybackPaused += OnPlaybackPaused;
                 if (Intent.GetBooleanExtra("Play", false))
                     OnPlayButtonClick(this, EventArgs.Empty);
-                else if (Common.EchoPlayer.IsPlaying && Common.EchoPlayer.DataSource == _show.ItemSoundUrl)
-                    _playButton.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.pause_black));
+                else if (MainActivity.EchoPlayer.IsPlaying && MainActivity.EchoPlayer.DataSource == _show.ItemSoundUrl)
+                    _playButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                        ? ContextCompat.GetDrawable(this, Resource.Drawable.pause_black)
+                        : ContextCompat.GetDrawable(this, Resource.Drawable.ic_pause_circle_outline_white_48dp));
                 else
-                    _playButton.SetImageDrawable(ContextCompat.GetDrawable(this, Resource.Drawable.play_black));
+                    _playButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                        ? ContextCompat.GetDrawable(this, Resource.Drawable.play_black)
+                        : ContextCompat.GetDrawable(this, Resource.Drawable.ic_play_circle_outline_white_48dp));
                 //show player layout (hidden by default) and hide progress bar
                 _playerReady = true;
                 if (_personsReady)
@@ -304,8 +348,8 @@ namespace Echo.Show
                     PlayerService.Playing -= OnPlaying;
                     PlayerService.Buffering -= OnBuffering;
                 }
-                Common.EchoPlayer.PlaybackStarted -= OnPlaybackStarted;
-                Common.EchoPlayer.PlaybackPaused -= OnPlaybackPaused;
+                MainActivity.EchoPlayer.PlaybackStarted -= OnPlaybackStarted;
+                MainActivity.EchoPlayer.PlaybackPaused -= OnPlaybackPaused;
             }
             catch (Exception)
             {
@@ -325,7 +369,7 @@ namespace Echo.Show
                 Bitmap photo;
                 try
                 {
-                    photo = await person.GetPersonPhoto(Common.DisplayWidth/5);
+                    photo = await person.GetPersonPhoto(MainActivity.DisplayWidth/5);
                 }
                 catch
                 {
@@ -351,16 +395,12 @@ namespace Echo.Show
                 }
                 else
                     span = true;
-                var nameCell = new TextView(this)
-                {
-                    Text = person.PersonName
-                };
+                var nameCell = new EchoTextView(this);
                 nameCell.SetWidth(0);
-                nameCell.SetBackgroundColor(Color.Transparent);
-                //nameCell.SetTextColor(Color.Black);
+                var personText = person.PersonName;
                 if (!string.IsNullOrEmpty(person.PersonAbout))
-                    nameCell.Text += (",\n" + person.PersonAbout);
-                nameCell.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+                    personText += (",\n" + person.PersonAbout);
+                nameCell.Setup(personText, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize);
                 row.AddView(nameCell);
                 var nameCellParams = (TableRow.LayoutParams)nameCell.LayoutParameters;
                 nameCellParams.SetMargins(8, 0, 0, 0);
@@ -380,10 +420,9 @@ namespace Echo.Show
         {
             if (!fromUser)
                 return;
-            if (Common.EchoPlayer.DataSource == _show.ItemSoundUrl)
+            if (MainActivity.EchoPlayer.DataSource == _show.ItemSoundUrl)
                 await PlayerService.Seek(progress);
-            else
-                seekBar.Progress = 0;
+            _show.ShowPlayerPosition = progress;
         }
 
         public void OnStartTrackingTouch(SeekBar seekBar)
@@ -392,6 +431,18 @@ namespace Echo.Show
 
         public void OnStopTrackingTouch(SeekBar seekBar)
         {
+        }
+
+        private async Task<bool> CheckConnectivity()
+        {
+            if (await CrossConnectivity.Current.IsRemoteReachable("echo.msk.ru"))
+                return true;
+            var message = "<font color=\"#ffffff\">" + Resources.GetText(Resource.String.network_error) + "</font>";
+            Snackbar.Make(FindViewById<CoordinatorLayout>(Resource.Id.main_content),
+                Html.FromHtml(message, FromHtmlOptions.ModeLegacy), 60000)
+                .SetAction(Resources.GetText(Resource.String.close), v => { OnBackPressed(); })
+                .Show();
+            return false;
         }
     }
 }

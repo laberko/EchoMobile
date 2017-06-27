@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="false">
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:background="@android:color/transparent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp">
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginBottom="12dp">
+                <net.laberko.EchoTextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/playRadioText" />
+                <ImageButton
+                    android:id="@+id/playRadioButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp"
+                    android:background="@android:color/transparent" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/onlineLayout"
+                android:visibility="gone"
+                android:orientation="vertical"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <View
+                    style="@style/Divider" />
+                <net.laberko.EchoTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/voteText"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginLeft="8dp" />
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_centerHorizontal="true"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp">
+                    <Button
+                        android:id="@+id/buttonVote1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="16dp"
+                        android:gravity="center" />
+                    <Button
+                        android:id="@+id/buttonVote2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="16dp"
+                        android:gravity="center" />
+                </LinearLayout>
+                <View
+                    style="@style/Divider" />
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginBottom="12dp">
+                    <net.laberko.EchoTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:id="@+id/callText" />
+                    <ImageButton
+                        android:id="@+id/callButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="8dp"
+                        android:background="@android:color/transparent" />
+                </LinearLayout>
+                <View
+                    style="@style/Divider" />
+                <net.laberko.EchoTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/sendSmsText"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginLeft="8dp" />
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginBottom="16dp">
+                    <EditText
+                        android:id="@+id/smsText"
+                        android:layout_weight="1"
+                        android:layout_height="0dp"
+                        android:layout_width="0dp"
+                        android:singleLine="false"
+                        android:inputType="textMultiLine"
+                        android:gravity="top"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginRight="16dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="8dp" />
+                    <ImageButton
+                        android:id="@+id/sendSmsButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="8dp"
+                        android:background="@android:color/transparent" />
+                </LinearLayout>
+                <View
+                    style="@style/Divider" />
+                <net.laberko.EchoTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/callWarningText"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginRight="8dp"
+                    android:layout_marginLeft="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
+</android.support.design.widget.CoordinatorLayout>

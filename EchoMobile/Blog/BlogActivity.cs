@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
+using Android.Support.Design.Widget;
 using Android.Support.V7.App;
+using Android.Text;
 using Android.Views;
-using Android.Webkit;
 using Android.Widget;
-using Echo.Person;
-using XamarinBindings.MaterialProgressBar;
+using Echo.BlogHistory;
+using Plugin.Connectivity;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 namespace Echo.Blog
@@ -19,48 +21,50 @@ namespace Echo.Blog
     [Activity (Label = "",
         Icon = "@drawable/icon",
         LaunchMode = LaunchMode.SingleTop,
+        ResizeableActivity = true,
         ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class BlogActivity : AppCompatActivity, View.IOnClickListener
     {
-        private WebView _textWebView;
+        private EchoWebView _textWebView;
         private AbstractContent _blog;
 
         protected override async void OnCreate (Bundle bundle)
         {
+            SetTheme(MainActivity.Theme);
             base.OnCreate(bundle);
 
             //no collection of daily blog contents
-            if (Common.BlogContentList == null)
+            if (MainActivity.BlogContentList == null)
             {
                 Finish();
                 return;
             }
             SetContentView(Resource.Layout.BlogItemView);
             var toolbar = FindViewById<Toolbar>(Resource.Id.toolbar_top);
-            toolbar.SetBackgroundColor(Color.ParseColor(Common.ColorPrimary[1]));
-            SetSupportActionBar(toolbar);
+            toolbar.SetBackgroundColor(Color.ParseColor(MainActivity.ColorPrimary[1]));
+            
+            
+            Window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
+            Window.SetNavigationBarColor(Color.ParseColor(MainActivity.PrimaryDarkColor[1]));
+            Window.SetStatusBarColor(Color.ParseColor(MainActivity.PrimaryDarkColor[1]));
 
-            if ((int) Build.VERSION.SdkInt > 19)
-            {
-                Window.SetNavigationBarColor(Color.ParseColor(Common.ColorPrimaryDark[1]));
-                Window.SetStatusBarColor(Color.ParseColor(Common.ColorPrimaryDark[1]));
-            }
-
-            var progressBar = FindViewById<MaterialProgressBar>(Resource.Id.blogsProgress);
+            var progressBar = FindViewById<ProgressBar>(Resource.Id.blogsProgress);
+            progressBar.ScaleX = 1.5f;
+            progressBar.ScaleY = 1.5f;
             progressBar.Visibility = ViewStates.Visible;
-            progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(Common.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
+            progressBar.IndeterminateDrawable.SetColorFilter(Color.ParseColor(MainActivity.ColorPrimary[1]), PorterDuff.Mode.SrcIn);
 
             //find blog with id passed to intent
-            var content = Common.BlogContentList.FirstOrDefault(c => c.ContentDate.Date == Common.SelectedDates[1].Date)?.ContentList;
+            var content = MainActivity.BlogContentList.FirstOrDefault(c => c.ContentDate.Date == MainActivity.SelectedDates[1].Date)?.ContentList;
             var blogId = Guid.Parse(Intent.GetStringExtra("ID"));
             //activity was called from content list?
             _blog = content?.FirstOrDefault(b => b.ItemId == blogId);
             if (_blog == null)
             {
                 //activity was called from person history list?
-                var person = Common.PersonList.FirstOrDefault(p =>
+                var person = MainActivity.PersonList.FirstOrDefault(p =>
                             (p.PersonName == Intent.GetStringExtra("AuthorName") &&
-                             p.PersonType == Common.PersonType.Blog));
+                             p.PersonType == MainActivity.PersonType.Blog));
                 if (person != null)
                     _blog = person.PersonContent.FirstOrDefault(b => b.ItemId == blogId);
                 if (_blog == null)
@@ -76,8 +80,8 @@ namespace Echo.Blog
             {
                 try
                 {
-                    _blog.ItemAuthor = await Common.GetPerson(_blog.ItemAuthorUrl, Common.PersonType.Blog);
-                    SupportActionBar.Title = _blog.ItemAuthorName;
+                    _blog.ItemAuthor = await MainActivity.GetPerson(_blog.ItemAuthorUrl, MainActivity.PersonType.Blog);
+                    toolbar.Title = _blog.ItemAuthorName;
                 }
                 catch
                 {
@@ -86,20 +90,25 @@ namespace Echo.Blog
                     Finish();
                     return;
                 }
-                SupportActionBar.Title = _blog.ItemAuthor?.PersonName;
+                toolbar.Title = _blog.ItemAuthor?.PersonName;
             }
             
             if (_blog.ItemDate.Date != DateTime.Now.Date)
-                SupportActionBar.Subtitle = _blog.ItemDate.ToString("dddd d MMMM yyyy");
+                toolbar.Subtitle = _blog.ItemDate.ToString("dddd d MMMM yyyy");
+
+            SetSupportActionBar(toolbar);
+
+            if (!await CheckConnectivity())
+                return;
 
             //get author's picture for the blog
             var pictureView = FindViewById<ImageButton>(Resource.Id.blogPic);
             try
             {
                 if (!string.IsNullOrEmpty(_blog.ItemAuthor?.PersonPhotoUrl))
-                    pictureView.SetImageBitmap(await _blog.ItemAuthor.GetPersonPhoto(Common.DisplayWidth / 3));
+                    pictureView.SetImageBitmap(await _blog.ItemAuthor.GetPersonPhoto(MainActivity.DisplayWidth / 3));
                 else if (!string.IsNullOrEmpty(_blog.ItemPictureUrl))
-                    pictureView.SetImageBitmap(await Common.GetImage(_blog.ItemPictureUrl, Common.DisplayWidth / 3));
+                    pictureView.SetImageBitmap(await MainActivity.GetImage(_blog.ItemPictureUrl, MainActivity.DisplayWidth / 3));
                 pictureView.SetOnClickListener(this);
             }
             catch
@@ -107,11 +116,9 @@ namespace Echo.Blog
                 pictureView.Visibility = ViewStates.Gone;
             }
             
-            //get blog's text (html)
-            var titleTextView = FindViewById<TextView>(Resource.Id.blogTitle);
-            titleTextView.Text = _blog.ItemTitle;
-            titleTextView.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize + 4);
-            //titleTextView.SetTextColor(Color.Black);
+            //get blog's text
+            var titleTextView = FindViewById<EchoTextView>(Resource.Id.blogTitle);
+            titleTextView.Setup(_blog.ItemTitle, MainActivity.MainDarkTextColor, TypefaceStyle.Bold, MainActivity.FontSize + 4);
             var html = string.Empty;
             try
             {
@@ -122,17 +129,8 @@ namespace Echo.Blog
                 progressBar.Visibility = ViewStates.Gone;
                 Finish();
             }
-            if (string.IsNullOrEmpty(html))
-            {
-                progressBar.Visibility = ViewStates.Gone;
-                Finish();
-            }
-            _textWebView = FindViewById<WebView>(Resource.Id.blogText);
-            _textWebView.SetBackgroundColor(Color.Transparent);
-            _textWebView.Settings.JavaScriptEnabled = true;
-            _textWebView.Settings.StandardFontFamily = "serif";
-            _textWebView.LoadDataWithBaseURL("", html, "text/html", "UTF-8", "");
-            _textWebView.Settings.DefaultFontSize = Common.FontSize;
+            _textWebView = FindViewById<EchoWebView>(Resource.Id.blogText);
+            _textWebView.Setup(html);
             progressBar.Visibility = ViewStates.Gone;
         }
 
@@ -183,6 +181,18 @@ namespace Echo.Blog
             intent.PutExtra("PersonUrl", _blog.ItemAuthorUrl);
             StartActivity(intent);
             Finish();
+        }
+
+        private async Task<bool> CheckConnectivity()
+        {
+            if (await CrossConnectivity.Current.IsRemoteReachable("echo.msk.ru"))
+                return true;
+            var message = "<font color=\"#ffffff\">" + Resources.GetText(Resource.String.network_error) + "</font>";
+            Snackbar.Make(FindViewById<CoordinatorLayout>(Resource.Id.main_content),
+                Html.FromHtml(message, FromHtmlOptions.ModeLegacy), 60000)
+                .SetAction(Resources.GetText(Resource.String.close), v => { OnBackPressed(); })
+                .Show();
+            return false;
         }
     }
 }

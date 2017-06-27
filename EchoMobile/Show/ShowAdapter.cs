@@ -36,29 +36,21 @@ namespace Echo.Show
             if (show == null)
                 return;
             viewHolder.Id = show.ItemId.ToString();
-            viewHolder.Date.Text = show.ItemDate.ToString("t");
-            viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[2]));
-            viewHolder.Date.SetBackgroundColor(Color.Transparent);
-            viewHolder.Date.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Title.Text = show.ItemTitle;
-            viewHolder.Title.SetBackgroundColor(Color.Transparent);
-            viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+            viewHolder.Date.Setup(show.ItemDate.ToString("t"), Color.ParseColor(MainActivity.ColorAccent[2]), TypefaceStyle.Bold, MainActivity.FontSize);
+            viewHolder.Title.Setup(show.ItemTitle, MainActivity.MainTextColor, TypefaceStyle.Bold, MainActivity.FontSize);
+
+            if (!string.IsNullOrEmpty(show.ItemSubTitle))
+                viewHolder.SubTitle.Setup(show.ItemSubTitle, MainActivity.MainTextColor, TypefaceStyle.Bold, MainActivity.FontSize - 4);
+            else
+                viewHolder.SubTitle.Visibility = ViewStates.Gone;
+
             if (!string.IsNullOrEmpty(show.ShowModeratorNames))
-            {
-                viewHolder.Moderators.Visibility = ViewStates.Visible;
-                viewHolder.Moderators.SetBackgroundColor(Color.Transparent);
-                viewHolder.Moderators.Text = show.ShowModeratorNames;
-                viewHolder.Moderators.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize - 4);
-            }
+                viewHolder.Moderators.Setup(show.ShowModeratorNames, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize - 4);
             else
                 viewHolder.Moderators.Visibility = ViewStates.Gone;
+
             if (!string.IsNullOrEmpty(show.ShowGuestNames))
-            {
-                viewHolder.Guests.Visibility = ViewStates.Visible;
-                viewHolder.Guests.SetBackgroundColor(Color.Transparent);
-                viewHolder.Guests.Text = show.ShowGuestNames;
-                viewHolder.Guests.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize - 4);
-            }
+                viewHolder.Guests.Setup(show.ShowGuestNames, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize - 4);
             else
                 viewHolder.Guests.Visibility = ViewStates.Gone;
 
@@ -68,10 +60,17 @@ namespace Echo.Show
                 try
                 {
                     //the show has audio
-                    if (Common.EchoPlayer != null && Common.EchoPlayer.DataSource == show.ItemSoundUrl && Common.EchoPlayer.IsPlaying)
-                        viewHolder.ListenButton.SetImageDrawable(ContextCompat.GetDrawable(_context, Resource.Drawable.pause_black));
+                    if (MainActivity.EchoPlayer != null && MainActivity.EchoPlayer.DataSource == show.ItemSoundUrl && MainActivity.EchoPlayer.IsPlaying)
+                        viewHolder.ListenButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                            ? ContextCompat.GetDrawable(_context, Resource.Drawable.pause_black)
+                            : ContextCompat.GetDrawable(_context, Resource.Drawable.ic_pause_circle_outline_white_48dp));
                     else
-                        viewHolder.ListenButton.SetImageDrawable(ContextCompat.GetDrawable(_context, Resource.Drawable.play_black));
+                        viewHolder.ListenButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                            ? ContextCompat.GetDrawable(_context, Resource.Drawable.play_black)
+                            : ContextCompat.GetDrawable(_context, Resource.Drawable.ic_play_circle_outline_white_48dp));
+                    viewHolder.DownloadButton.SetImageDrawable(MainActivity.Theme == Resource.Style.MyTheme_Light
+                        ? ContextCompat.GetDrawable(_context, Resource.Drawable.download_black)
+                        : ContextCompat.GetDrawable(_context, Resource.Drawable.download_white));
                     viewHolder.ButtonsLayout.Visibility = ViewStates.Visible;
                     viewHolder.ButtonsLayout.SetBackgroundColor(Color.Transparent);
                 }

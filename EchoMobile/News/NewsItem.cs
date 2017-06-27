@@ -8,7 +8,7 @@ namespace Echo.News
     //single news item
     public class NewsItem : AbstractContent
     {
-        public NewsItem(Common.ContentType itemType) : base(itemType)
+        public NewsItem(MainActivity.ContentType itemType) : base(itemType)
         {
             
         }
@@ -21,7 +21,7 @@ namespace Echo.News
             HtmlDocument newsRoot;
             try
             {
-                newsRoot = await Common.GetHtml(ItemUrl);
+                newsRoot = await MainActivity.GetHtml(ItemUrl);
             }
             catch
             {
@@ -30,10 +30,13 @@ namespace Echo.News
             var newsRootDiv = newsRoot?.DocumentNode.Descendants("div").FirstOrDefault(n => n.Attributes.Contains("class") && n.Attributes["class"].Value == "column");
             var typicalDiv = newsRootDiv?.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("typical"));
             var newsStringBuilder = new StringBuilder();
-            //style html and append downloaded divs
-            newsStringBuilder.AppendLine(@"<style>img{display: inline; height: auto; max-width: 100%;}</style>");
-            newsStringBuilder.AppendLine(@"<style>div{height: auto; max-width: 100%;}</style>");
-            newsStringBuilder.AppendLine(@"<body>");
+            newsStringBuilder.AppendLine(@"<style>img{display: inline; height: auto; max-width: 100%;}");
+            newsStringBuilder.AppendLine(@"div{height: auto; max-width: 100%;}</style>");
+            newsStringBuilder.Append("<body text = ");
+            newsStringBuilder.Append(MainActivity.WebViewTextColor);
+            newsStringBuilder.Append(" link = ");
+            newsStringBuilder.Append(MainActivity.WebViewLinkColor);
+            newsStringBuilder.AppendLine(">");
             if (typicalDiv != null)
             {
                 newsStringBuilder.AppendLine(typicalDiv.InnerHtml);

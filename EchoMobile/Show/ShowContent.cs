@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Android.Widget;
 using HtmlAgilityPack;
-using XamarinBindings.MaterialProgressBar;
+//using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.Show
 {
     //shows content for a specific day
     public class ShowContent : AbstractContentFactory, INotifyPropertyChanged
     {
-        private readonly MaterialProgressBar _progressBar;
+        private readonly ProgressBar _progressBar;
 
-        public ShowContent(DateTime day, MaterialProgressBar progressBar):base(day)
+        public ShowContent(DateTime day, ProgressBar progressBar):base(day)
         {
             _progressBar = progressBar;
             GetContent();
@@ -30,7 +31,7 @@ namespace Echo.Show
             HtmlDocument root;
             try
             {
-                root = await Common.GetHtml(allShowsUrl);
+                root = await MainActivity.GetHtml(allShowsUrl);
             }
             catch
             {
@@ -92,6 +93,7 @@ namespace Echo.Show
                     var showTitle = titleNode?.InnerText.Replace("\n\t\t", string.Empty).Replace("  ", string.Empty);
                     if (showTitle == null)
                         continue;
+                    var subTitleDiv = aboutDiv.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("notice"));
                     var showRootUrl = titleNode.GetAttributeValue("href", string.Empty);
                     var personsDiv = aboutDiv.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") && d.Attributes["class"].Value.Contains("persons"));
                     var persons = personsDiv?.Descendants("a");
@@ -111,12 +113,13 @@ namespace Echo.Show
                             moderatorNameList.Add(person.Descendants("b").FirstOrDefault()?.InnerText);
                         }
                     }
-                    var show = new ShowItem(Common.ContentType.Show)
+                    var show = new ShowItem(MainActivity.ContentType.Show)
                     {
                         ItemId = Guid.NewGuid(),
                         ItemUrl = showTextUrl,
                         ItemDate = showDateTime,
                         ItemTitle = showTitle,
+                        ItemSubTitle = subTitleDiv != null ? subTitleDiv.InnerText.Trim() : string.Empty,
                         ShowModeratorNames = moderatorNameList.Count > 0 ? "Ведущие: " + string.Join(", ", moderatorNameList) : string.Empty,
                         ShowModeratorUrls = moderatorUrlList.Distinct().ToList(),
                         ShowGuestNames = guestNameList.Count > 0 ? "Гости: " + string.Join(", ", guestNameList) : string.Empty,
@@ -130,7 +133,7 @@ namespace Echo.Show
             foreach (var show in allShows)
             {
                 //fill the collection of new shows and replace modified ones
-                var existingShow = ContentList.FirstOrDefault(s => (s.ItemType == Common.ContentType.Show && s.ItemDate == show.ItemDate));
+                var existingShow = ContentList.FirstOrDefault(s => (s.ItemType == MainActivity.ContentType.Show && s.ItemDate == show.ItemDate));
                 if (existingShow == null)
                     newContent.Add(show);
                 //text or audio was added to an existing show
@@ -148,8 +151,8 @@ namespace Echo.Show
             list.AddRange(newContent);
             //assign Shows property to raise PropertyChanged
             ContentList = list.OrderByDescending(b => b.ItemDate).ToList();
-            Common.PlayList = ContentList
-                .Where(c => (c.ItemType == Common.ContentType.Show && !string.IsNullOrEmpty(c.ItemSoundUrl)))
+            MainActivity.PlayList = ContentList
+                .Where(c => (c.ItemType == MainActivity.ContentType.Show && !string.IsNullOrEmpty(c.ItemSoundUrl)))
                 .OrderBy(c => c.ItemDate).Cast<ShowItem>().ToArray();
             _progressBar.Visibility = Android.Views.ViewStates.Gone;
         }

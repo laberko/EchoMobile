@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using Android.Graphics;
 using Android.Support.V7.Widget;
 using Android.Views;
+using Echo.Person;
 
-namespace Echo.Person
+namespace Echo.BlogHistory
 {
     //RecyclerView adapter to connect the data set (blog) to the RecyclerView
     public class BlogHistoryAdapter : RecyclerView.Adapter
@@ -30,13 +31,10 @@ namespace Echo.Person
             var blog = Content[position];
             if (blog == null)
                 return;
-            viewHolder.Date.Text = blog.ItemDate.ToString("d MMMM yyyy");
-            viewHolder.Date.SetTextColor(Color.ParseColor(Common.ColorAccent[1]));
-            viewHolder.Date.SetBackgroundColor(Color.Transparent);
-            viewHolder.Date.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
-            viewHolder.Title.Text = blog.ItemTitle;
-            viewHolder.Title.SetBackgroundColor(Color.Transparent);
-            viewHolder.Title.SetTextSize(Android.Util.ComplexUnitType.Sp, Common.FontSize);
+
+            viewHolder.Date.Setup(blog.ItemDate.ToString("d MMMM yyyy"), Color.ParseColor(MainActivity.ColorAccent[1]),
+                TypefaceStyle.Bold, MainActivity.FontSize);
+            viewHolder.Title.Setup(blog.ItemTitle, MainActivity.MainTextColor, TypefaceStyle.Normal, MainActivity.FontSize);
             viewHolder.Id = blog.ItemId.ToString();
         }
 

@@ -7,13 +7,14 @@
   <string name="news">Новости</string>
   <string name="blog">Блоги</string>
   <string name="show">Передачи</string>
+  <string name="online">Онлайн</string>
   <string name="author">Автор</string>
   <string name="back">Назад</string>
   <string name="today">Сегодня</string>
   <string name="moderators">Ведущие</string>
   <string name="guests">Гости</string>
   <string name="settings">Настройки</string>
-  <string name="music"> Музыка</string>
+  <string name="music">Музыка</string>
   <string name="downloads">Загрузки</string>
   <string name="documents">Документы</string>
   <string name="podcasts">Подкасты</string>
@@ -26,4 +27,18 @@
   <string name="show_history_count">Количество передач в результатах поиска:</string>
   <string name="blog_history_count">Количество блогов в результатах поиска:</string>
   <string name="about">О программе</string>
+  <string name="theme">Тема:</string>
+  <string name="light">Светлая</string>
+  <string name="dark">Темная</string>
+  <string name="network_error">Ошибка соединения с сервером!</string>
+  <string name="listen_radio">Слушать эфир онлайн</string>
+  <string name="send_sms">Отправить сообщение в студию</string>
+  <string name="enter_text">Введите текст сообщения!</string>
+  <string name="send_error">Ошибка при отправке сообщения!</string>
+  <string name="send_ok">Сообщение успешно отправлено!</string>
+  <string name="vote">Голосование в прямом эфире</string>
+  <string name="call">Звонок в студию</string>
+  <string name="close">Закрыть</string>
+  <string name="exit">Выход</string>
+  <string name="call_warning">За отправку сообщений и звонки может взиматься плата в соответствии с тарифами Вашего оператора сотовой связи. Будьте внимательны!</string>
 </resources>

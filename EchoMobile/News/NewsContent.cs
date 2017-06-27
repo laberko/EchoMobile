@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Android.Widget;
 using HtmlAgilityPack;
-using XamarinBindings.MaterialProgressBar;
+//using XamarinBindings.MaterialProgressBar;
 
 namespace Echo.News
 {
     //news content for a specific day
     public class NewsContent : AbstractContentFactory, INotifyPropertyChanged
     {
-        private readonly MaterialProgressBar _progressBar;
+        private readonly ProgressBar _progressBar;
 
-        public NewsContent(DateTime day, MaterialProgressBar progressBar):base(day)
+        public NewsContent(DateTime day, ProgressBar progressBar):base(day)
         {
             _progressBar = progressBar;
             GetContent();
@@ -28,7 +29,7 @@ namespace Echo.News
             HtmlDocument root;
             try
             {
-                root = await Common.GetHtml(allNewsUrl);
+                root = await MainActivity.GetHtml(allNewsUrl);
             }
             catch
             {
@@ -50,7 +51,7 @@ namespace Echo.News
                 TimeSpan newsTime;
                 if (!TimeSpan.TryParse(timeNode.InnerText, out newsTime))
                     continue;
-                allNews.Add(new NewsItem(Common.ContentType.News)
+                allNews.Add(new NewsItem(MainActivity.ContentType.News)
                 {
                     ItemId = Guid.NewGuid(),
                     ItemUrl = "http://echo.msk.ru" + urlNode.GetAttributeValue("href", string.Empty),
